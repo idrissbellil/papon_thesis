@@ -1,21 +1,13 @@
 
 .thesis.log
 
-endmatter/colophon.aux
-
-thesis.lof
-
-thesis.synctex.gz
-
-thesis.pdfsync
-
 *.aux
 
 *.blg
 
 *.out
 
-*.gz(busy)
+*.gz
 
 *.toc
 
@@ -24,3 +16,17 @@ thesis.pdfsync
 *.fdb_latexmk
 
 *.bbl
+
+*~
+
+*.backup
+
+.*
+
+!/.gitignore
+
+*.bak
+
+*.lof
+
+*.pdfsync

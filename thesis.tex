@@ -1,19 +1,20 @@
 %!TEX TS-program = xelatex
 %!TEX encoding = UTF-8 Unicode
 
-\documentclass{harvard-thesis}
+\documentclass{papon_thesis}
 
 \begin{document}
-
+\watermark {DRAFT COPY ONLY}
 % the front matter
 \input{frontmatter/coverpage}
+\makegermantitle
 \maketitle
-\copyrightpage
+\referentpage
+\include{copyright}
 \abstractpage
 \tableofcontents
-%\authorlist
 \listoffigures
-\dedicationpage
+%\dedicationpage
 \acknowledgments
 
 \onehalfspacing
@@ -22,6 +23,12 @@
 \include{chapters/chapter1}
 \include{chapters/chapter2}
 \include{chapters/chapter3}
+\include{chapters/chapter4}
+\include{chapters/chapter5}
+\include{chapters/chapter6}
+\include{chapters/chapter7}
+\include{chapters/conclusion}
+
 
 \singlespacing
 
@@ -30,6 +37,10 @@
 \bibliography{references}
 \addcontentsline{toc}{chapter}{References}
 \bibliographystyle{plainnat}
-\include{endmatter/colophon}
+%\include{endmatter/colophon}
+
+\begin{appendices}
+\include{chapters/oculus_appendix}
+\end{appendices}
 
 \end{document}
