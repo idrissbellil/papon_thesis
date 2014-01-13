@@ -55,7 +55,6 @@
 
 \renewcommand{\cftchapfont}{\normalsize \scshape}
 
-\raggedright
 
 \RequirePackage{pdfsync} %do pdf synchronization [andy]
 
@@ -81,11 +80,13 @@
 \RequirePackage{fancyhdr}
 \pagestyle{fancy} % options: empty , plain , fancy
 \RequirePackage[palatino]{quotchap}
-\definecolor{chaptergrey}{rgb}{0.6,0,0}
+\definecolor{chaptergrey}{rgb}{0.5490, 0.5451, 0.5882}
 \RequirePackage{titling}
 \RequirePackage{setspace}
 \RequirePackage{booktabs} % for much better looking tables
-\RequirePackage[labelfont={sf,bf,small},textfont={sf,small},justification=RaggedRight,margin=0pt, figurewithin=section, tablewithin=section]{caption}
+\RequirePackage[labelfont={rm,bf,small},textfont={rm,small},justification=RaggedRight,margin=0pt, figurewithin=section, tablewithin=section]{caption}
+\RequirePackage{foreign}
+
 \doublespacing
 \addtolength{\footnotesep}{\footnotesep}
 
