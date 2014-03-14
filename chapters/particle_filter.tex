@@ -1,4 +1,42 @@
 %For an example of a full page figure, see Fig.~\ref{fig:myFullPageFigure}.
 
-\chapter{Particle Filters}
+\chapter{Sequential Bayesian Estimation}
+
+Sequential Bayesian estimation refers to a class of approaches for estimating a varying unknown probability density function from a time series of noisy observations. These approaches use a state space representation, in which a state vector $\mathbf{x}_t$ describes the hidden state of a dynamic system. The goal is to estimate the posterior distribution of the state given all prior observations $\mathbf{z}$, i.e., $\mathit{p}(\mathbf{x}_t|\mathbf{z}_{1:t})$. This is accomplished using a two step recursion which first generates a hypothesis of the current state conditioned on the previous state and then performs a Bayes update using the new observation. These steps are known as the prediction and filtering steps, respectively. 
+
+The prediction step estimates the current distribution given all prior observations, or
+\begin{equation} \label{eqn:prior}
+\mathit{p}(\mathbf{x}_t|\mathbf{z}_{1:t-1}) =  \int{ \mathit{p}(\mathbf{x}_t|\mathbf{x}_{t-1})\mathit{p}(\mathbf{x}_{t-1}|\mathbf{z}_{1:t-1}) \mathit{d}\mathbf{x}_{t-1}}. 
+\end{equation}
+This requires the specification of a stochastic \textit{dynamic model} to characterize the state transition density $\mathit{p}(\mathbf{x}_t|\mathbf{x}_{t-1})$:
+\begin{equation} 
+\mathbf{x}_t = \mathit{f}_t(\mathbf{x}_{t-1},\mathbf{v}_t) ,
+\end{equation}
+where $\mathbf{v}_t$ is the process noise. The dynamic model takes advantage of knowledge of the system to generate reliable predictions of how the state evolves independent of observations. 
+
+The filtering step uses Bayes rule to update the predicted density by conditioning it on the new observation $\mathbf{z}_t$:
+\begin{equation} \label{eqn:posterior}
+\mathit{p}(\mathbf{x}_t|\mathbf{z}_{1:t}) =  \frac{ \mathit{p}(\mathbf{z}_t|\mathbf{x}_{t})\mathit{p}(\mathbf{x}_{t}|\mathbf{z}_{1:t-1})} {\mathit{p}(\mathbf{z}_{t}|\mathbf{z}_{1:t-1})}. 
+\end{equation}
+This requires the specification of a \textit{measurement model} to characterize the observation density $\mathit{p}(\mathbf{z}_t|\mathbf{x}_{t})$:
+\begin{equation} 
+\mathbf{z}_t = \mathit{h}_t(\mathbf{x}_{t},\mathbf{w}_t) ,
+\end{equation}
+where $\mathbf{w}_t$ is the measurement noise. The marginal likelihood $\mathit{p}(\mathbf{z}_{t}|\mathbf{z}_{1:t-1})$ is constant relative to the state, and is generally ignored in practice and replaced with a simple normalizing factor. 
+
+Once the filtered, or posterior distribution is determined, an estimate of the state can be made using a variety of techniques (e.g., MAP, mean-shift). 
+
+\section{Particle Filters}
+Unfortunately, except for in special cases (such as the linear Gaussian case with the Kalman filter) determining an exact solution for the posterior distribution is not feasible. As such, Particle Filter techniques were developed to approximate the posterior distribution. They use sequential Monte Carlo to directly implement the Bayesian recursion equations on a set of samples. The most common Particle Filter algorithm is Sequential Importance Sampling (SIS) recursively updates a set of $N$ samples (particles) from the previous time step $\{ \mathbf{x}^{i}_{t-1}, w^i_{t-1} \}$ in a two-step procedure: 
+
+\begin{enumerate}
+ \item \textbf{Predict:} Apply the dynamic model to find an estimate of the new state for each particle, $\tilde{\mathbf{x}}^{1..N}_t$. That is, draw samples from the state transition prior distribution $\mathit{p}(\mathbf{x}_t|\mathbf{x}_{t-1})$.
+ \item \textbf{Update:} Evaluate the weight for each particle using the observation density:  $\tilde{w}^i_t = \mathit{p}(\mathbf{z}_t|\tilde{\mathbf{x}}_{t})$ and then normalize.
+\end{enumerate}
+
+The set of weighted particles $\{ \mathbf{x}^{i}_{t}, w^i_{t} \}$ then approximates the posterior distribution, and an overall state estimate can be found using any appropriate method.
+
+\subsection{Resampling}
+An important issue with SIS is that for any finite number of particles the weights will tend to degenerate to the trivial set where all particles have weight zero except for one. This results in the observations having no effect on the particle trajectories, meaning the filter amounts to a random walk using the dynamic model. To avoid this problem, a resampling step was added \cite{GordonEtAlPf, Rubin:SIR} which generates a new particle set by sampling from the existing particle set. The simplest way of doing this is to simply sample from the multinomial distribution of the particle weights and then set all particle weights to $1/N$. While this \textit{multinomial resampling} can be effective if employed judiciously, it can also lead to other problems, namely an increasing variance of the posterior distribution. To overcome this a variety of low-variance resampling techniques have been developed; we refer the reader to \cite{Douce:Resampling} for a concise summary of the different approaches.
+
 

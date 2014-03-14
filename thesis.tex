@@ -2,6 +2,7 @@
 %!TEX encoding = UTF-8 Unicode
 
 \documentclass{papon_thesis}
+\usepackage{todonotes}
 
 \begin{document}
 \watermark {DRAFT COPY ONLY}
@@ -20,12 +21,12 @@
 
 \onehalfspacing
 
-% incluude each chapter...
+% include each chapter...
 \include{chapters/introduction}
 \include{chapters/video_seg_relaxation}
 \include{chapters/world_model}
 \include{chapters/model_based}
-\include{chapters/hierarchical_based}
+\include{chapters/tracking_based_segmentation}
 \include{chapters/conclusion}
 
 
@@ -33,7 +34,7 @@
 
 % the back matter
 \clearpage
-\bibliography{references}
+\bibliography{IEEEabrv,PaponRefs,references,IROS2013,ECCV2012.bib}
 \addcontentsline{toc}{chapter}{References}
 \bibliographystyle{plainnat}
 %\include{endmatter/colophon}

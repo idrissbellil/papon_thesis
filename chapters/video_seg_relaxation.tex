@@ -6,6 +6,7 @@ Some Quote.
 %For an example of a full page figure, see Fig.~\ref{fig:myFullPageFigure}.
 
 \chapter{Video Segmentation by Relaxation of Tracked Masks}
+\label{Chap:VideoSegRelaxation}
 \newthought{There's something to be said} for having a good opening line. 
 
 Before proceeding to discuss the principal elements of the proposed algorithm in detail, we shall first give a brief overview of the algorithm (depicted in Figure \ref{fig:AlgorithmFlow}). The algorithm begins by performing an initial segmentation on the first frame $\mathbf{F}_{t_0}$ to generate an initial set of labels $\mathbf{S}_{t_0}$. This segmentation result is used to generate initial sets of particles, each of which contains a map of the object. Color histogram features are then generated for each particle (as in \cite{ColorBasedProbabilisticTracking}) and particles are initialized with randomly distributed initial velocities. Thus each object $k$ at initial time $t_0$ from the segmentation is specified by a set of $N_k$ particles $\mathbf{X}^{k,1:N_k}_{t_0}$, each of which contains a representation of the object, specified by a pixel existence map $\mathbf{M}$, a reference color histogram $\mathit{\hat{q}}$ calculated from $\mathbf{F}_{t_0} \cap \mathbf{M}^{k,n}_{t_0}$, a position shift vector $\
@@ -206,3 +207,4 @@ In addition to showing the strengths of our method, a weakness was also highligh
 \label{fig:Results}
 \end{figure}
 
+\section{Discussion}

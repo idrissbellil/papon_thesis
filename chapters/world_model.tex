@@ -6,6 +6,9 @@ Some Quote.
 %For an example of a full page figure, see Fig.~\ref{fig:myFullPageFigure}.
 
 \chapter{Patch-based Perceptual World Model}
+\label{Chap:WorldModel}
+\todo[inline]{Brief Introduction to 3D Data Acquisition and Representation (from Simon Thesis)}
+
 \newthought{There's something to be said} for having a good opening line. 
 \section{Octree Adjacency Graph}
 \label{subsec:Adjacency}
@@ -53,9 +56,9 @@ VCCS supervoxels are clusters in a 39 dimensional space, given as
 \label{eqn:FeatureSpace}
 \mathbf{F} = [x,y,z,L,a,b,\textrm{FPFH}_{1..33}],
 \end{equation}
-where $x,y,z$ are spatial coordinates, $L,a,b$ are color in CIELab space, and $\textrm{FPFH}_{1..33}$ are the 33 elements of Fast Point Feature Histograms (FPFH), a local geometrical feature proposed by Rusu \foreignabbrfont{et al} \cite{FPFH}. FPFH are pose-invariant features which describe the local surface model properties of points using combinations of their \textit{k} nearest neighbors. They are an extension of the older Point Feature Histograms optimized for speed, and have a computational complexity of $O(n \cdot k)$.  
+where $x,y,z$ are spatial coordinates, $L,a,b$ are color in CIELab space, and $\textrm{FPFH}_{1..33}$ are the 33 elements of Fast Point Feature Histograms (FPFH), a local geometrical feature proposed by Rusu et al.\@ \cite{FPFH}. FPFH are pose-invariant features which describe the local surface model properties of points using combinations of their \textit{k} nearest neighbors. They are an extension of the older Point Feature Histograms optimized for speed, and have a computational complexity of $O(n \cdot k)$.  
 
-In order to calculate distances in this space, we must first normalize the spatial component, as distances, and thus their relative importance, will vary depending on the seed resolution ${R}_{seed}$. Similar to the work of Achanta \foreignabbrfont{et al}, \cite{SLICCompared} we have limited the search space for each cluster so that it ends at the neighboring cluster centers. This means that we can normalize our spatial distance $D_s$ using the maximally distant point considered for clustering, which will lie at a distance of $\sqrt{3} {R}_{seed}$. Color distance $D_c$, is the euclidean distance in CIELab space, normalized by a constant $m$. Distance in FPFH space, $D_f$, is calculated using the Histogram Intersection Kernel \cite{HistogramIntersection}. This leads us to a equation for normalized distance $D$:
+In order to calculate distances in this space, we must first normalize the spatial component, as distances, and thus their relative importance, will vary depending on the seed resolution ${R}_{seed}$. Similar to the work of Achanta et al.\@, \cite{SLICCompared} we have limited the search space for each cluster so that it ends at the neighboring cluster centers. This means that we can normalize our spatial distance $D_s$ using the maximally distant point considered for clustering, which will lie at a distance of $\sqrt{3} {R}_{seed}$. Color distance $D_c$, is the euclidean distance in CIELab space, normalized by a constant $m$. Distance in FPFH space, $D_f$, is calculated using the Histogram Intersection Kernel \cite{HistogramIntersection}. This leads us to a equation for normalized distance $D$:
 \begin{equation}
 \label{eqn:Distance}
 D = \sqrt{\frac{\lambda D_c^2}{m^2}+\frac{\mu D_s^2}{3 {R}_{seed}^{2}}+\epsilon {D}_{HiK}^{2}},
@@ -151,7 +154,7 @@ Examples of over-segmentations produced by the methods are given in Figure~\ref{
 %------------------------------------------------------------------------
 
 \subsection{Dataset}
-For testing, we used the recently created NYU Depth Dataset V2 semantic segmentation dataset of Silberman \foreignabbrfont{et al} \cite{NYUDataset}\footnote{\url{http://cs.nyu.edu/~silberman/datasets/nyu_depth_v2.html}}. This contains 1449 pairs of aligned RGB and depth images, with human annotated densely labeled ground truth. The images were captured in diverse cluttered indoor scenes, and present many difficulties for segmentation algorithms such as varied illumination and many small similarly colored objects. Examples of typical scenes are shown in Figure~\ref{fig:ExampleSegmentations}.
+For testing, we used the recently created NYU Depth Dataset V2 semantic segmentation dataset of Silberman et al.\@ \cite{NYUDataset}\footnote{\url{http://cs.nyu.edu/~silberman/datasets/nyu_depth_v2.html}}. This contains 1449 pairs of aligned RGB and depth images, with human annotated densely labeled ground truth. The images were captured in diverse cluttered indoor scenes, and present many difficulties for segmentation algorithms such as varied illumination and many small similarly colored objects. Examples of typical scenes are shown in Figure~\ref{fig:ExampleSegmentations}.
 %For further details on the dataset we refer the reader to the original work\cite{NYUDataset}. 
 
 \subsection{Returning to the Projected Plane}
@@ -194,6 +197,22 @@ As superpixels are used as a preprocessing step to reduce the complexity of segm
 \end{figure}
 %------------------------------------------------------------------------
 
+\section{Sequential Update of Perceptual Model}
+Adding newly observed points to an existing supervoxel octree is accomplished through a three stage process. First, we must insert the points into the octree, and initialize new leaves for them if they did not exist previously. This results in an octree where leaves fall into three possible categories (illustrated in Fig.~\ref{fig:VoxelVisibility}; they are either new, observed, or unobserved in the most recent observation. Handling of new leaves is straightforward; we simply calculate adjacency relations to existing leaves and flag them as unlabeled. 
+\begin{figure}[tb]
+  \centering
+  \includegraphics[scale=1.2]{figures/IROS2013/VoxelVisibility.pdf}
+  \caption[Voxel Visibility]{Categorization of voxels based on new frame of data. Voxels fall into three categories, they are either new, observed or not observed in the frame. Furthermore, observed voxels can either have changed or remained the same, while voxels not observed in the frame are either occluded or no longer exist (in which case they should be deleted).}
+  \label{fig:VoxelVisibility}
+\end{figure}
+
+To determine whether a leaf which existed previously has changed, we test the distance between the centroid of the points falling within its voxel (from the new frame) and its previous centroid. This is done in the same feature space used for growing the supervoxels, that is, we test whether the normal, color, and spatial location have varied more than a threshold value. This threshold is set to a relatively low constant value so that it favors false-positives (finding change when there was none), as they do not impact the tracking performance of the algorithm, but only have a slight effect on its run-time.  If a leaf is found to have changed, we remove its previous labeling. We also perform a global check to see if more than half of a supervoxels support has changed; if so, we completely remove the supervoxels label from all of its constituent voxels. 
+
+Finally, we must consider how to handle leaves which were not observed in the inserted point cloud. Rather than simply prune them, we first check if it was possible to observe them from the viewpoint of the sensor which generated the input cloud. This occlusion check can be accomplished efficiently using the octree by determining if any voxels exist between unobserved leaves and the sensor viewpoint. If a clear line of sight exists from the leaf to the camera, it can safely be deleted. Conversely, if the path is obstructed, we "freeze" the leaf, meaning that it will remain constant until it is either observed or passes the line of sight test in a future frame (in which case, it can be safely deleted). This occlusion testing means that tracking of occluded objects is trivial, as occluded voxels remain in the observations which are used for tracking.
+
+Once the octree voxels have been updated, we then proceed to update the supervoxels as before. That is, first we generate new seeds in regions of large unlabeled voxels, and then conduct the iterative region growing. This results in new supervoxels in regions which are new or changing, while leaving supervoxels in static and occluded regions unchanged. This reduces the tracking and segmentation problem to finding the best joint association of these new supervoxels with those from the prior time-step.
+
+\section{Discussion}
 
 
 %% Requires fltpage2 package
