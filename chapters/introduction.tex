@@ -16,25 +16,46 @@ This chapter presents the motivation behind our work by first discussing the thr
 Image segmentation aims to divide the set of pixels in an image into a number of distinct subsets, where each subset represents some semantically meaningful entity (e.g., an object - see Fig. \ref{fig:segmentation_example}). This is a notoriously tricky business, particularly because it is something that humans are able to do intuitively. This ease with which humans can segment visual scenes is highly deceptive; Marvin Minsky, one of the pioneers of Artificial Intelligence (AI), famously assigned one of his students ``computer vision'' as a summer undergraduate project in 1966. Nearly half a century later, despite the extensive effort to solve it, image segmentation, the first step on the long road to complete ``computer vision'', remains an unsolved problem. 
 
 \todo[inline]{Some citations about image segmentation by humans (from CVPR paper)}
-\missingfigure{Example of Image Segmentation, labeling, showing how we use colors for labels}
+\begin{figure}
+\label{fig:SegmentationExample}
+\centering
+\includegraphics[width=\linewidth]{figures/Introduction/segmentation_GT_example.png}
+\caption[Example of Segmentation and Ground Truth]{Example of Segmentation and Ground Truth. From left to right we have an image, a segmentation from a computer vision algorithm, and a human-annotated ground truth labeling. Here labels are represented by different colors. We shall use this convention throughout the rest of this work.}
+\end{figure}
 
-The reason for this is two-fold: firstly, there are many technical or physical challenges associated with properly dividing an image into separate objects. Among these, shadows, occlusions, reflections, imaging noise and so forth can all greatly affect the results of image segmentation. Consider, for instance, a partial occlusion as in Fig. \ref{fig:partial_occlusion}. A human can easily identify that the parts on either side of the occluder belong to same object. This is accomplished using what we shall refer to as \emph{high-level} knowledge throughout this work - in this case, knowledge of the complete nature of an object. 
+The reason for this is two-fold: firstly, there are many technical or physical challenges associated with properly dividing an image into separate objects. Among these, shadows, occlusions, reflections, imaging noise and so forth can all greatly affect the results of image segmentation. Consider, for instance, a partial occlusion as in Fig. \ref{fig:SegmentationProblems}. A human can easily identify that the parts on either side of the occluder belong to same object. This is accomplished using what we shall refer to as \emph{high-level} knowledge throughout this work - in this case, knowledge of the complete nature of an object. 
 
 This leads us to the second challenge in image segmentation, which is that, generally speaking, there is no ``correct'' solution to the problem. A perfect labeling for one application might be useless in another. This is even more of a problem when we are discussing segmentation separate from any application, as is the case with standard image segmentation benchmarks (which are use to quantify algorithm performance). These benchmarks use ground-truth image labels (manually created by humans) to score the output of different algorithms. Unfortunately, the correctness of different labelings is highly subjective, and hand-drawn labels from  people can differ radically.
 
-\missingfigure{Example of Occlusion, other problems in segmentation}
+\begin{figure}
+\label{fig:SegmentationProblems}
+\centering
+\includegraphics[width=\linewidth]{figures/Introduction/Segmentation_Problems.pdf}
+\caption[Technical Difficulties of Segmentation]{Technical Difficulties of Segmentation. Here we see some of the myriad of technical difficulties present in color-based segmentation, such as transparent objects (the water bottle), partial occlusions (the toaster), objects with strong color differences (the little monster), and similarities in color (the bottle cap to the table).}
+\end{figure}
+
 
 \subsection{The Tracking Problem}
 Multi-target visual tracking (MTVT) is a crucial challenge for many computer vision applications such as visual surveillance, action recognition, and robotic imitation learning. In many such functions, visual tracking serves as the precursor to all further high-level inference, making robust tracking fundamental to the success of a large variety of intelligent systems. The general goal of MTVT is to sequentially estimate the number of targets and their corresponding states (e.g., position, velocity). This is accomplished by associating noisy observations over time with the entities which produced them. Tracking links targets into sequential states (known as \emph{tracks}), typically using some a-priori detection model, such as tracking a human face in video based on a facial model. In general, this is done by estimating some state for each tracked object (e.g. a bounding box around a person's face) given an observation (e.g., the output of a face detector).
 
-\missingfigure{Example of Multi Target Tracking, such as pedestrian tracking or face tracking}
+\begin{figure}
+\label{fig:ExampleTracking}
+\centering
+\includegraphics[width=\linewidth]{figures/Introduction/Tracking_Example.pdf}
+\caption[Example of Visual Tracking]{Example of Visual Tracking. This shows outputs from various trackers in a standard video tracking benchmark. Some of the difficulties of tracking can be seen- in particular complex backgrounds, motion blur, partial occlusions (second frame from left) and even full occlusions (right-most frame).}
+\end{figure}
 
 The primary challenge in MTVT is the data association problem - deciding which tracked target a particular observation belongs to. Confounding this is the additional null possibility, where an observation belongs to none of the tracked targets. Closer examination reveals that the difficulties are related to those of image segmentation, simply extended into the temporal dimension. In particular, interacting and occluded targets are especially challenging.
 
 \subsection{Video Object Segmentation - Segmentation In Sequential Frames}
 Video object segmentation (VOS) attempts to cluster pixels of video frames into segments which are both spatially and temporally coherent. While similar to MTVT, VOS goes a step beyond localizing tracked objects, in that it makes an association decision for each observed pixel; in addition to estimating overall state, it must re-estimate spatial extent every frame. Additionally, VOS has the additional consideration that target appearance models are unknown a-priori, and are subject to arbitrary changes over time. 
 
-\missingfigure{Example of Video Object Segmentation - frames from, for example Alexey's Segmentation}
+\begin{figure}
+\label{fig:ExampleSegmentation}
+\centering
+\includegraphics[width=\linewidth]{figures/Introduction/Video_Segmentation.pdf}
+\caption[Example of Video Object Segmentation]{Example of Video Object Segmentation - from \cite{Abramov_WACV12}. This shows the goal of VOS - to extract a dense labeling (labels here are shown as distinct colors) for every frame, maintaining temporal consistency of objects. For many applications it is of vital importance to make the labeling consistent from frame to frame, that is, to maintain object identities.}
+\end{figure}
 
 One interesting aspect of video segmentation is that it has the potential to be more accurate than single image segmentation, as it can take advantage of the temporal coherence of objects to infer information about the objects in a scene. Unfortunately, the addition of the temporal domain brings along new challenges as well; for instance that pixels which should be grouped across time may not be continuously visible, as in the case of partial or full occlusions. Additionally, the added dimension increases the computational complexity of the problem, making accurate segmentation a costly procedure. Temporal information also increases the exposure of the algorithm to noise, as each image frame is a separate noisy measurement. This adds a large amount of uncertainty to the problem, since measured values (i.e., of color) for an object can show significant variation over time. 
  
