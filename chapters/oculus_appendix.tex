@@ -36,7 +36,7 @@ contain no actual data (and thus minimal overhead), and merely serve as a messag
 \includegraphics[width=165mm,height=100mm]{SystemFlowColor.pdf}
 \includegraphics[width=170mm,height=112mm]{SystemOutput.pdf}
 \end{center}
-  \caption{Overview of the system architecture and demonstration system output for four frames. The colums show output from the different components; from left to right, Kinect image and depth (in mm), optical flow, and graphs overlaid on segmentation plugin output. This type of output can be seen live in any number of visualization windows within the GUI.}
+  \caption[Overview of the system architecture]{Overview of the system architecture and demonstration system output for four frames. The colums show output from the different components; from left to right, Kinect image and depth (in mm), optical flow, and graphs overlaid on segmentation plugin output. This type of output can be seen live in any number of visualization windows within the GUI.}
 \label{fig:SystemArchitecture}
 \end{figure*}
 
@@ -66,7 +66,7 @@ Our global buffer concept was designed to overcome the limitations of standard o
 \begin{center}
    \includegraphics[width=0.6\linewidth]{BufferComparaison.pdf}
 \end{center}
-   \caption{A typical buffering scheme (top) and our buffer (bottom).}
+   \caption[Comparison of Buffering Schemes]{A typical buffering scheme (top) and our buffer (bottom).}
 \label{fig:BufferFig}
 \end{figure}
 Figure~\ref{fig:BufferFig} compares a standard pipeline with our global buffer; unlike a typical buffering scheme, our global buffer maintains and manages all memory in a central location (and separate thread). The global buffer is responsible for dynamic allocation of all data containers, maintaining reference counts, and determining when a frame can expire. Since the global buffer is responsible for maintaining memory, plugins use a message passing system to communicate. Plugins pass messages to each other to notify completion of a new frame, or to trigger a feedback mechanism. They also use the message passing system to request that the global buffer allocate a new data container for their output. When a developer creates a new type of data container, they use a simple interface to pass the global buffer a function pointer for creating an instance of their new data container type. 
@@ -77,7 +77,7 @@ In order to fully understand the limitations of a standard buffering system, con
 \begin{center}
 \includegraphics[width=0.6\linewidth]{Feedback.pdf}
 \end{center}
-   \caption{Feedback using a global buffer}
+   \caption[Feedback using a Global Buffer]{Feedback using a global buffer}
 \label{fig:Feedback}
 \end{figure}
 
@@ -93,7 +93,7 @@ A naive implementation of this architecture would simply serialize the operation
 \begin{center}
 \includegraphics[width=0.7\linewidth]{ConcurrentGPU.pdf}
 \end{center}
-   \caption{Streaming; Concurrent kernel execution}
+   \caption[Streaming and Concurrent Kernels]{Streaming; Concurrent kernel execution}
 \label{fig:Streaming}
 \end{figure}
 
@@ -132,7 +132,7 @@ This type of graph representation is then encoded by a semantic event chain (SEC
 \begin{center}
    \includegraphics[width=0.98\linewidth,height=65mm]{TimingResults.pdf}
 \end{center}
-   \caption{Timing results for demonstration system; plugins are color coded and contain frame numbers. When run in single thread mode, short GPU operations such as optical flow are significantly faster due to reduced overhead; this results in slightly lower (2ms) frame lag. The true benefit of multi-threaded mode is the higher maximum frame-rate that can be achieved. }
+   \caption[Timing results for demonstration system]{Timing results for demonstration system; plugins are color coded and contain frame numbers. When run in single thread mode, short GPU operations such as optical flow are significantly faster due to reduced overhead; this results in slightly lower (2ms) frame lag. The true benefit of multi-threaded mode is the higher maximum frame-rate that can be achieved. }
 \label{fig:TestMTST}
 \end{figure*}
 
@@ -157,7 +157,7 @@ As seen in Figure~\ref{fig:TestVis}, the addition of visualization components ha
 \begin{center}
    \includegraphics[width=0.5\linewidth]{TimingGraph.pdf}
 \end{center}
-   \caption{Visualization has a slight impact on performance, but the effect is negligible in multi-threaded mode where the slight increases in processing time are hidden in the length of the longest component (in this case, segmentation).}
+   \caption[Performance Effect of Visualization]{Visualization has a slight impact on performance, but the effect is negligible in multi-threaded mode where the slight increases in processing time are hidden in the length of the longest component (in this case, segmentation).}
 \label{fig:TestVis}
 \end{figure}
 

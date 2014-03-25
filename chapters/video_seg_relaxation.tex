@@ -8,11 +8,22 @@ Some Quote.
 \chapter{Video Segmentation by Relaxation of Tracked Masks}
 \label{Chap:VideoSegRelaxation}
 \newthought{There's something to be said} for having a good opening line. 
+This Chapter presents an algorithm for VOS on standard video frames (as opposed to those which also have depth data). The aim of this research was to overcome two of the main drawbacks of the color-based video segmentation method developed by Abramov et al. \cite{Abramov_RealtimeSegmentation} (and indeed, of color-based VOS in general). Firstly, and most importantly, we sought to correctly track objects through partial and full occlusions. This is an important and unsolved issue with all video object segmentation methods - they simply cannot maintain object identities through occlusions. The second was to allow for object identities to be maintained through sudden and/or fast movements - something that was not possible due to some of the core assumptions in the algorithm.
 
-Before proceeding to discuss the principal elements of the proposed algorithm in detail, we shall first give a brief overview of the algorithm (depicted in Figure \ref{fig:AlgorithmFlow}). The algorithm begins by performing an initial segmentation on the first frame $\mathbf{F}_{t_0}$ to generate an initial set of labels $\mathbf{S}_{t_0}$. This segmentation result is used to generate initial sets of particles, each of which contains a map of the object. Color histogram features are then generated for each particle (as in \cite{ColorBasedProbabilisticTracking}) and particles are initialized with randomly distributed initial velocities. Thus each object $k$ at initial time $t_0$ from the segmentation is specified by a set of $N_k$ particles $\mathbf{X}^{k,1:N_k}_{t_0}$, each of which contains a representation of the object, specified by a pixel existence map $\mathbf{M}$, a reference color histogram $\mathit{\hat{q}}$ calculated from $\mathbf{F}_{t_0} \cap \mathbf{M}^{k,n}_{t_0}$, a position shift vector $\
-mathbf{p_{t_0}}$, and a velocity vector $\mathbf{v_{t_0}}$.
+To solve the occlusion problem, we proposed to use a layering of deformable object masks that are allowed to interact and compete for ``ownership'' of pixels. To help with sudden object movements, we tracked the masks with a set of particle filters, a class of Bayesian predictive filters which are well known for their ability to handle difficult trajectories \cite{TrackingMultipleParticleFiltering,MonteCarloMTT,SequentialMonteCarloMultitargetFiltering}.
+
+Before proceeding to discuss the principal elements of the proposed algorithm in detail, we shall first give a brief overview of the algorithm (depicted in Figure \ref{fig:AlgorithmFlow}). The algorithm begins by performing an initial segmentation on the first frame $\mathbf{F}_{t_0}$ to generate an initial set of labels $\mathbf{S}_{t_0}$. This segmentation result is used to generate initial sets of particles, each of which contains a map of the object. Color histogram features are then generated for each particle (as in \cite{ColorBasedProbabilisticTracking}) and particles are initialized with randomly distributed initial velocities. Thus each object $k$ at initial time $t_0$ from the segmentation is specified by a set of $N_k$ particles $\mathbf{X}^{k,1:N_k}_{t_0}$, each of which contains a representation of the object, specified by a pixel existence map $\mathbf{M}$, a reference color histogram $\mathit{\hat{q}}$ calculated from $\mathbf{F}_{t_0} \cap \mathbf{M}^{k,n}_{t_0}$, a position shift vector $\mathbf{p_{t_0}}$, and a velocity vector $\mathbf{v_{t_0}}$.
+
+\begin{figure}
+\includegraphics[width=\linewidth]{figures/ECCV2012/AlgorithmFlow2.pdf}
+  \caption[Overview of Algorithm]{Flow of algorithm for one time step, shown for three of the labels ($k_1$, $k_2$, and $k_3$). For description see Section \ref{Chap:VideoSegRelaxation}}
+\label{fig:AlgorithmOverview}
+\end{figure}
 
 The particles are then propagated in time independently, shifting their existence maps to new regions of the image. These shifted maps are used to generate new measured color histograms $q_{t_0+1}$ from frame $\mathbf{F}_{t_0+1}$, which are evaluated to determine particle weights. The set of particles for object $k$, $\mathbf{X}^{k,1:N_k}_{t_0+1}$, is then combined to create an overall object pixel likelihood map $\mathbf{\hat{M}}^k_{t_0+1}$. The pixel likelihood maps for all objects are then used to generate a label association likelihood map $\mathbf{\hat{L}}_{t_0+1}$, for frame $\mathbf{F}_{t_0+1}$, where each pixel in the map is a PDF specifying the probability of the pixel belonging to each object $k$.
+
+
+
 
 The label association likelihood map is then sampled using a per-pixel selection procedure (as described in Section~\ref{sec:LabelAssocLikeliehoodMap}) to generate a candidate label image, $\tilde{\mathbf{S}}_{t_0+1}$. This is used as the initialization for the Metropolis-Hastings algorithm with annealing of Abramov et al. \cite{Abramov_RealtimeSegmentation}, which updates the labels iteratively until an equilibrium segmented state is reached. The segmentation result, $\mathbf{S}_{t_0+1}$  is subsequently used to update the set of particles via three mechanisms; birth, decay, and repopulation. Birth is used for new labels $k$ in the segmentation output, and consists of initializing a set of particles $\mathbf{X}^k$ for the new label. Decay occurs when a label is not found in the segmentation output, and consists of killing a number of the particles of the missing label, determined by the decay rate $\lambda_d$. The most commonly occurring mechanism, repopulation, is a key component of the algorithm, and 
 occurs for all previously existing object labels which are found in $\mathbf{S}_{t_0+1}$. Repopulation rejuvenates the set of particles for an object by replacing a number (determined by the repopulation rate $\lambda_r$) of particles in the set with particles generated from $\mathbf{S}_{t_0+1}$ and $\mathbf{F}_{t_0+1}$. That is, the map $\mathbf{M}$ and color histogram $\hat{q}_{k}$ of the repopulating particles are initialized using the new segmentation output and image frame. 
@@ -24,7 +35,7 @@ Metropolis algorithm with a simulated annealing, called {\em relaxation process}
 \begin{figure}
 \label{fig:Convergence}
 \centering
-\includegraphics[scale = 0.82]{figures/ECCV2012/ConvergenceFig2.pdf}
+\includegraphics[width=\linewidth]{figures/ECCV2012/ConvergenceFig2.pdf}
 \caption[Relaxation Convergence]{The relaxation process causes the energy of the label image to converge after few iterations (outcome after 10 iterations shown here). This results in efficient calculation of an accurate and temporally coherent segmentation.}
 \label{fig:Convergence}
 \end{figure}
@@ -202,9 +213,15 @@ In addition to showing the strengths of our method, a weakness was also highligh
 %color histograms as a measurement. In the sequence, the black box being tracked passes in front of another black box several times. In almost all cases, particles are attracted to the other box, which results in twin peaks in $\mathbf{\hat{M}}^k_{t}$. While the tracked object is not lost, this results in the final segmented output having the same label for both boxes.
 
 \begin{figure}[t]
-\includegraphics[height=9.2cm,width=12cm]{figures/ECCV2012/Tracking.pdf}
+\includegraphics[width=\linewidth]{figures/ECCV2012/Tracking.pdf}
   \caption[Tracked output from lemming sequence]{Output frames from the \textit{lemming} sequence, in which a target is completely occluded (for $\sim20$ frames, second column) and changes significantly in appearance. The object which is tracked for comparison to other algorithms is highlighted with a green box. $\mathbf{F}_t$-Original frames from  movie.~~$\mathbf{S}_t$-The output of the segmentation algorithm.~~$\tilde{\mathbf{S}}_{t}$-The candidate label image constructed by taking a random draw from $\mathbf{\hat{L}}_{t}$, the label association likelihood map.~~$\mathbf{\hat{M}}^k_{t}$-The overall object pixel likelihood map for the lemming label, created by combining the set of particles for the label. Intensity represents the sum of the normalized weights of the set of particles.}
 \label{fig:Results}
+\end{figure}
+
+\begin{figure}[t]
+\includegraphics[width=\linewidth]{figures/ECCV2012/Cranfield_Results.pdf}
+  \caption[Results of Cranfield Sequence]{Results of segmentation on Cranfield Benchmark Sequence. Green masks show observed pixels, while red masks show occluded pixels which are believed to belong to the object.}
+\label{fig:Cranfield_Results}
 \end{figure}
 
 \section{Discussion}
