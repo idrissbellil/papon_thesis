@@ -7,7 +7,44 @@ Some Quote.
 
 \chapter{Patch-based Perceptual World Model}
 \label{Chap:WorldModel}
-\todo[inline]{Brief Introduction to 3D Data Acquisition and Representation (from Simon Thesis)}
+\todo[inline]{Connection here - why are we moving to 3d? Why are we creating a world model?}
+
+\section{Voxelization}
+The resolution of a standard RGB-D camera such as the Kinect is 640x480 pixels, yielding about 300,000 points per frame. While for static image segmentation this might be an acceptable amount of data, for video segmentation it is simply too much data to process directly in reasonable run times (on standard hardware). Because of this, a common pre-processing step is to down-sample point clouds using a \textit{voxel-grid} filter, a process known as \textit{voxelization}. 
+
+\begin{figure}[t]
+\begin{center}
+\includegraphics[width=0.8\linewidth]{figures/WorldModel/stanford_bunny.png}
+\end{center}
+   \caption[Example of Voxelization]{Illustration of Voxelization. On the left we have a point cloud of the ``Stanford Bunny''. This cloud is inserted into the voxel grid shown on the right, where all points falling within on grid unit, or voxel, are combined. From \cite{PCLWebsite}}
+\label{fig:stanford_bunny}
+\end{figure}
+%------------------------------------------------------------------------
+
+\begin{figure}[t]
+\begin{center}
+\includegraphics[width=\linewidth]{figures/WorldModel/voxel_grid_octree.png}
+\end{center}
+   \caption[Octree Voxelization]{Use of an octree for voxelization. The points are grouped into voxels by recursively subdividing the bounding box into its eight constituent octants. This recursion terminates when the box size has edge length equal to the voxel leaf size ${R}_{voxel}$.}
+\label{fig:stanford_bunny}
+\end{figure}
+
+\begin{figure}[t]
+\begin{center}
+\includegraphics[width=0.5\linewidth]{figures/WorldModel/2d_nearest_neigh.png}
+\end{center}
+   \caption[Adjacency in a 2d Grid]{Standard adjacency of pixels in a 2d grid. Neighbors can share edges (4-neighborhood) or vertices (8-neighborhood).}
+\label{fig:stanford_bunny}
+\end{figure}
+
+\begin{figure}[t]
+\begin{center}
+\includegraphics[width=0.9\linewidth]{figures/WorldModel/3d_nearest_neigh.png}
+\end{center}
+   \caption[Adjacency in a 3d Grid]{Adjacency in a 3d voxel grid. The 6-, 18-, and 26-neighborhoods share a face, edge, and vertex, respectively.}
+\label{fig:stanford_bunny}
+\end{figure}
+
 
 \newthought{There's something to be said} for having a good opening line. 
 \section{Octree Adjacency Graph}
@@ -19,9 +56,6 @@ As a preliminary step, we construct the adjacency graph for the voxel-cloud. Thi
 \section{Spatial Cluster Seeding}
 \label{subsec:Seeding}
 The algorithm begins by selecting a number of seed points which will be used to initialize the supervoxels. In order to do this, we first divide the space into a voxelized grid with a chosen resolution ${R}_{seed}$, which is significantly higher than ${R}_{voxel}$. The effect of increasing the seed resolution ${R}_{seed}$ can be seen in Figure~\ref{fig:SegmentedDiffSeeds}. Initial candidates for seeding are chosen by selecting the voxel in the cloud nearest to the center of each occupied seeding voxel.    
-
-
-
 
 Once we have candidates for seeding, we must filter out seeds caused by noise in the depth image. This means that we must remove seeds which are points isolated in space (which are likely due to noise), while leaving those which exist on surfaces. To do this, we establish a small search radius ${R}_{search}$ around each seed, and delete seeds which do not have at least as many voxels as would be occupied by a planar surface intersecting with half of the search volume (this is shown by the green plane in Figure~\ref{fig:SeedingDiagram}). Once filtered, we shift the remaining seeds to the connected voxel within the search volume which has the smallest gradient in the search volume. Gradient is computed as
 \begin{equation} \label{eqn:Gradient}
@@ -114,9 +148,96 @@ Rather than transforming the clouds back and forth, we instead transform the bin
 \label{fig:quantization_transform}
 \end{figure*}
 
+\section{Locally Convex Connected Patches (LCCP)}
+
+\begin{figure}[!ht]
+\centering
+  \includegraphics[width=0.7\linewidth]{figures/CVPR2014/flow_diagram}
+    \caption[Flow Diagram of LCCP]{Flow diagram of the segmentation algorithm. \textbf{A)} RGB images corresponding to the point clouds of the scene. The red lines show two isolated concavities. The blue box shows an area with a surface singularity. \textbf{B)} Supervoxel adjacency graph. \textbf{C)} Model depicting the classified graph. Black lines denote convex connections, red lines concave ones and turquois lines singular connections (those, where two patches are connected only in a single point). \textbf{D)} Segmentation result; object labels are shown by different colors. \textbf{E)} Final result after noise filtering. The right column illustrates the supervoxel patches and the convexity and sanity criteria used for edge classification.}
+  \label{fig:flow}
+\end{figure}
+
+As an example of an application of supervoxels and the adjacency octree, we shall briefly present a segmentation method which segments the supervoxel adjacency graph by classifying whether the connection $e=(\vec p_i, \vec p_j)$ between two supervoxels is convex (=valid) or concave (=invalid).
+
+\textbf{Extended Convexity Criterion (CC)} Consider two adjacent supervoxels with centroids at the positions $\vec x_1,\vec x_2$ and normals $\vec n_1, \vec n_2$. Whether the connection between these is convex or concave can be inferred from the relation of the surface normals to the vector joining their centroids.
+
+The angle of the normals to the vector $\vec d = \vec x_1-\vec x_2$ joining the centroids can be calculated using the identity for the dot product $\vec a\cdot \vec b = |\vec a|\cdot |\vec b|\cdot \cos(\alpha)$ with $\alpha = \measuredangle(\vec a,\vec b)$. For \textit{convex} connections, $\alpha_1$ is smaller than $\alpha_2$ (see Fig.~\ref{fig:details}~A). This can be expressed as:
+  \begin{equation*}
+    \alpha_1 < \alpha_2 \Rightarrow \cos(\alpha_1) - \cos(\alpha_2) > 0 \Leftrightarrow \vec {n_1}\cdot \hat d - \vec {n_2}\cdot \hat d > 0,
+  \end{equation*}
+where $\hat d = \frac{\vec{x_1}-\vec{x_2}}{||\vec{x_1}-\vec{x_2}||}$. Similarly, for a \textit{concave} connection we get:
+  \begin{equation*}
+    \alpha_1 > \alpha_2 \Leftrightarrow \vec {n_1}\cdot \hat d - \vec {n_2}\cdot \hat d < 0.
+  \end{equation*}
+Note that these operations are commutative, thus the choice of which patch is $\vec x_1$, does not change the result. Also the criterion is still valid if the $\vec x_i$ are displaced, as long as they stay within the surface.
+
+To compensate for noise in the RGB-D data, a bias is introduced to treat concave connections with very similar normals, that is
+\begin{align*}
+  \beta = \measuredangle(\vec n_1,\vec n_2) = |\alpha_1-\alpha_2| = \cos^{-1}(\vec{n_1}\cdot \vec{n_2}) < \beta_\text{Thresh}~,
+\end{align*}
+as convex, since those usually represent flat surfaces. Depending on the value of the \textit{concavity tolerance threshold} $\beta_\text{Thresh}$, concave surfaces with low curvature are seen as convex and thus merged in the segmentation. This behavior may be desired to ignore small concavities. We set:
+\begin{align}
+  \text{CC}_b(\vec p_i, \vec p_j) :=
+  \left\{\begin{array}{lc}
+          \text{true} & \left(\vec {n_1} - \vec {n_2} \right) \cdot \hat d  > 0~ \lor~ (  \beta < \beta_\text{Thresh} )\\
+            \text{false} & \text{otherwise.}\\
+          \end{array} \right.
+  \label{eqn:CC}
+\end{align}
+
+where the variable $CC_b$ defines the {\em basic convexity criterion}. However, local errors in the feature estimation caused by noise in the data can propagate very easily, potentially leading to errors in the resulting segmentation. This also makes the recognition of small concavities harder, as subtle features are more sensitive to noise. To improve on this we -- finally -- also include neighborhood information in the classification of edges: For a convex edge $e=(\vec p_i, \vec p_j)$, we require that there exists a common neighbor $\vec p_c$ of $\vec p_i$ and $\vec p_j$ that has a convex connection to both.
+
+Thus we define \textit{extended convexity} $CC_e$:
+\begin{align}
+  \begin{aligned}
+   \text{CC}_e (\vec p_i, \vec p_j) = \text{CC}_b(\vec p_i, \vec p_j) \land \text{CC}_b(\vec p_i, \vec p_c) \\ \land \text{CC}_b(\vec p_j, \vec p_c)
+  \end{aligned}
+\end{align}
+
+With extended convexity, more evidence is necessary for a connection to be labeled as convex. Our implementation is based on the idea proposed by Moosmann \cite{Moosmann_Phdthesis}. In some cases results are already satisfactory even without using this type of neighborhood information. Thus, in the results section we will always denote whether this is used or not.\\
+
+\begin{figure}[!ht]
+ \centering
+ \includegraphics[width=0.7\linewidth]{figures/CVPR2014/algorithmic_details}
+ \caption[Convexity Measures]{ \textbf{A)} Illustration of measures used in the basic convexity criterion. \textbf{B)} Illustration of the sanity criterion for decreasing values of $\vartheta$. Singular connections are characterized by small values of $\vartheta$.}
+ \label{fig:details}
+\end{figure}
+
+\textbf{Region Growing:}
+The second problem discussed in the Introduction, the danger of splitting objects along {\em isolated concavities}, can be addressed in the next step. For this we need to find all {\em clusters} of supervoxels, which belong to the same subgraph of valid convex connected edges. This is accomplished using a region growing process: First, an arbitrary seed supervoxel is chosen and labeled. This label is then propagated over the graph with a depth search that is only allowed to grow over convex edges. Once no new supervoxel can be assigned to the segment, we choose a new seed supervoxel that has not been labeled and propagate the new label as before, repeating the process until all supervoxels have been labeled. Note that all our criteria are commutative, so the output of the region growing does not depend on the choice of the seeds.\\
+
+
 
 \section{Experimental Results}
+\subsection{Datasets}
+In the following sections we present quantitative results for VCCS and LCCP. We compare to state-of-the-art methods on the \textit{NYU Indoor Dataset}\cite{Silberman:ECCV12} and \textit{Object Segmentation Database}\cite{Richtsfeld:IROS12}. 
 
+\subsubsection{Object Segmentation Database (OSD)}
+The \textit{Object Segmentation Database} (OSD-v0.2) was proposed by Richtsfeld \textit{et al.}\cite{Richtsfeld:IROS12} in 2012. It consists of 111 cluttered scenes of objects on a table, taken with close proximity to the pictured objects. The scenes contain multiple objects, which have mostly box-like or cylindrical shape, with partial and full occlusions and heavy clutter in 2D as well as 3D. Importantly, most objects in the data set are \textit{simple}, that is, consist of only a single part. This makes the ground-truth data relatively non-ambiguous.
+
+\begin{figure}[!ht]
+ \centering
+ \includegraphics[width=1\linewidth]{figures/CVPR2014/osd_examples}
+ \caption[OSD Dataset Examples]{ Example results for the OSD dataset. Points beyond a distance of 2m were cropped for visualization. Parameters: $R_{voxel}=0.005$, $R_{seed}=0.02$, $\beta_\text{Thresh}=10^\circ$.  }
+ \label{fig:OSD_results}
+\end{figure}
+
+The qualitative examples (Fig.~\ref{fig:OSD_results}) show that our algorithm performs very well in the segmentation of these cluttered scenes. The object separation can be intuitively understood: all objects present in the scenes are separated by concave boundaries, i.e. a line connecting neighboring surfaces of two different objects always travels through ``air''. This is also true for the boundary between an object and the supporting surface. As a consequence, objects that have a convex shape are correctly captured as one segment and separated from the other objects. Hollow objects (bowls, cups etc.) can be observed to show multiple segments inside, because the orientation of surface normals changes strongly on these concave surfaces. Despite most objects being simple, some objects have meaningful parts, such as handles or bottle caps, which are segmented by our algorithm.
+
+The quantitative results (Table~\ref{tab:res_stat}) demonstrate that our approach is able to compete with state-of-the-art methods in the task of segmenting cluttered scenes with 'single-part' objects. Compared to the learning-based method from \cite{Richtsfeld:IROS12} we achieve better object separation ($F_{us}$), but higher oversegmentation error ($F_{os}$). The latter is because we sometimes detect object parts (\textit{e.g.} handles) and we do not utilize model fitting, which helps against noise. Comparing to the learning-free method of \"Uckermann \textit{et al.} \cite{Ritter2012} we obtain results within a standard deviation. Note that our actual goal is to partition complex objects into parts, which is dissimilar from the other two methods.
+
+\begin{figure*}[!thb]
+ \centering
+ \includegraphics[width=1\linewidth]{figures/CVPR2014/nyu_examples.pdf}
+ \caption[NYU Dataset Examples]{Example results for scenes from the NYU dataset using unsmoothed depth. Black areas indicate missing depth. Top row: rgb images. Mid. row: segmentation result. Bottom row: ground truth. Parameters A-C: $R_{voxel}=0.0075$, $R_{seed}=0.03$ and $\beta_\text{Thresh}=8^\circ$. Parameters D-E: $R_{voxel}=0.01$, $R_{seed}=0.04$ and $\beta_\text{Thresh}=10^\circ$ (identical to quantitative results, see Tab. \ref{tab:res_lccp_nyu}).}
+ \label{fig:nyu_examples}
+\end{figure*}
+
+\subsubsection{NYU Indoor Dataset (NYU)}
+The \textit{NYU Indoor Dataset}\footnote{\url{http://cs.nyu.edu/~silberman/datasets/nyu_depth_v2.html}} (NYUv2) from Silberman \textit{et al.}\cite{Silberman:ECCV12} is a large and complex dataset, consisting of 1449 cluttered indoor scenes. The data consists of pairs of aligned RGB and depth images, along with human annotated densely labeled ground truth. The images were captured in diverse indoor scenes, and present many difficulties for segmentation algorithms such as varied illumination and many small similarly colored objects. Examples of typical scenes are shown in Figure~\ref{fig:ExampleSegmentations}. One main difficulty presented by the dataset is that the distance to objects from the camera is quite large in the dataset. This results in significant depth quantization artifacts as well as few data points for many objects. Additionally, depth is often missing for extensive portions of many of the images, due to limitations of the Kinect sensor (e.g. reflective, transparent surfaces - windows are especially problematic). Silberman \textit{et al.} attempt to correct for these errors using a hole filling algorithm (smoothdepth), which estimates depth for missing areas based on the scheme from Levin \textit{et al.}\cite{Levin2004}.
+
+
+\subsection {Supervoxels}
 \label{sec:Evaluation}
 In order to evaluate the quality of supervoxels generated by VCCS, we performed a quantitative comparison with three state-of-the-art superpixel methods using publicly available source code. 
 We selected the two 2D techniques with the highest published performance from a recent review \cite{SLICCompared}: a graph based method, GCb10 \cite{SuperpixelsSupervoxels}\footnote{\url{http://www.csd.uwo.ca/~olga/Projects/superpixels.html}}, and a gradient ascent local clustering method, SLIC \cite{SLICCompared}\footnote{\url{http://ivrg.epfl.ch/supplementary_material/RK_SLICSuperpixels/index.html}}.
@@ -153,11 +274,7 @@ Examples of over-segmentations produced by the methods are given in Figure~\ref{
 \end{figure*}
 %------------------------------------------------------------------------
 
-\subsection{Dataset}
-For testing, we used the recently created NYU Depth Dataset V2 semantic segmentation dataset of Silberman et al.\@ \cite{NYUDataset}\footnote{\url{http://cs.nyu.edu/~silberman/datasets/nyu_depth_v2.html}}. This contains 1449 pairs of aligned RGB and depth images, with human annotated densely labeled ground truth. The images were captured in diverse cluttered indoor scenes, and present many difficulties for segmentation algorithms such as varied illumination and many small similarly colored objects. Examples of typical scenes are shown in Figure~\ref{fig:ExampleSegmentations}.
-%For further details on the dataset we refer the reader to the original work\cite{NYUDataset}. 
-
-\subsection{Returning to the Projected Plane}
+\subsubsection{Returning to the Projected Plane}
 RGB+D sensors produce what is known as an organized point cloud- a cloud where every point corresponds to a pixel in the original RGB and depth images. When such a cloud is voxelized, it necessarily loses this correspondence, and becomes an unstructured cloud which no longer has any direct relationship back to the 2D projected plane. As such, in order to compare results with existing 2D methods we were forced to devise a scheme to apply supervoxel labels to the original image. 
 
 To do this, we take every point in the original organized cloud and search for the nearest voxel in the voxelized representation. Unfortunately, since there are blank areas in the original depth image due to such factors as reflective surfaces, noise, and limited sensor range, this leaves us with some blank areas in the output labeled images. To overcome this, we fill in any large unlabeled areas using the SLIC algorithm. This is not a significant drawback, as the purpose of the algorithm is to form supervoxels in 3D space, not superpixels in the projected plane, and this hole-filling is only needed for comparison purposes. Additionally, the hole filling actually makes our results worse, since it does not consider depth, and therefore tends to bleed over some object boundaries that were correctly maintained in the supervoxel representation. An example of what the resulting segments look like before and after this procedure are shown in Figure~\ref{fig:ReturnToPlane}. 
@@ -173,8 +290,7 @@ To do this, we take every point in the original organized cloud and search for t
 \label{fig:UndersegError}
 \end{figure}
 %------------------------------------------------------------------------
-
-\subsection{Evaluation Metrics}
+\subsubsection{Evaluation Metrics}
 The most important property for superpixels is the ability to adhere to, and not cross, object boundaries. To measure this quantitatively, we have used two standard metrics for boundary adherence- boundary recall and under-segmentation error\cite{Turbopixels, SuperpixelsSupervoxels}. Boundary recall measures what fraction of the ground truth edges fall within at least two pixels of a superpixel boundary. High boundary recall indicates that the superpixels properly follow the edges of objects in the ground truth labeling. The results for boundary recall are given in Figure~\ref{fig:BoundaryRecall}. As can be seen, VCCS and SLIC have the best boundary recall performance, giving similar results as the number of superpixels in the segmentation varies. 
 
 Under-segmentation error measures the amount of leakage across object boundaries. For a ground truth segmentation with regions $g_1,...,g_M$, and the set of superpixels from an over-segmentation, $s_1,...s_K$, under-segmentation error is defined as 
@@ -184,7 +300,7 @@ Under-segmentation error measures the amount of leakage across object boundaries
 \end{equation}
 where $s_j \mid s_j \cap g_i$ is the set of superpixels required to cover a ground truth label $g_i$, and $N$ is the number of labeled ground truth pixels. A lower value means that less superpixels violated ground truth borders by crossing over them. Figure~\ref{fig:UndersegError} compares the four algorithms, giving under-segmentation error for increasing superpixel counts. VCCS outperforms existing methods for all superpixel densities. 
 
-\subsection{Time Performance}
+\subsubsection{Time Performance}
 As superpixels are used as a preprocessing step to reduce the complexity of segmentation, they should be computationally efficient so that they do not negatively impact overall performance. To quantify segmentation speed, we measured the time required for the methods on images of increasing size (for the 2D methods) and increasing number of voxels (for VCCS). All measurements were recorded on an Intel Core i7 3.2Ghz processor, and are shown in Figure~\ref{fig:SegmentationSpeed}. VCCS shows performance competitive with SLIC and DASP (the two fastest superpixel methods in the literature) for voxel clouds of sizes which are typical for Kinect data at ${R}_{voxel}=0.008m$ (20-40k voxels). It should be noted that only VCCS takes advantage of multi-threading (for octree, kd-tree, and FPFH computation), as there are no publicly available multi-threaded implementations of the other algorithms.  
 
 %------------------------------------------------------------------------
@@ -196,6 +312,37 @@ As superpixels are used as a preprocessing step to reduce the complexity of segm
 \label{fig:SegmentationSpeed}
 \end{figure}
 %------------------------------------------------------------------------
+
+\subsection{Locally Convex Connected Patches (LCCP)}
+
+We compare segments against ground truth using three standard measures: \textit{Weighted Overlap} (WOv), which is a summary measure proposed by Silberman \textit{et al.} \cite{Silberman:ECCV12}, as well as \textit{false negative} ($fn$) and \textit{false positive} ($fp$) scores from \cite{Ritter2012} and \textit{over-} ($F_{os}$) and \textit{under-segmentation} ($F_{us}$) from \cite{Richtsfeld:IROS12}.
+
+\begin{table*}[!htb]
+  \centering
+  \begin{tabular}{c|c|c|c}
+%   \textbf{Overlap} & \textbf{Weighted Overlap} & \textbf{oversegmentation} & \textbf{undersegmentation} \\
+  Method & Learned Features & Depth Data  & WOv\\ \hline \hline
+  \multirow{2}{*}{LCCP} & NO LEARNING & depth & 53.6\% \\ \cline{2-4}
+                                           & NO LEARNING & smoothdepth & 53.8\% \\ \hline
+  LCCP + ext. convexity & NO LEARNING & smoothdepth &  57.6\% \\ \hline \hline
+  \multirow{4}{*}{Silberman \textit{et al.}\cite{Silberman:ECCV12}} & RGB  & - &  50.3\% \\ \cline{2-4}
+                                           & Depth & both  & 53.7\% \\ \cline{2-4}
+                                           & RGB-D & both  & 60.1\% \\ \cline{2-4}
+                                           & RGB-D + Support + Structure classes & both & 61.1\% \\ \hline \hline
+  \multirow{2}{*}{Gupta \textit{et al.}\cite{Gupta:CVPR2013}} & gPb-ucm Gradients (from \cite{Arbelaez:PAMI2011}) & - &  55.0\% \\ \cline{2-4}
+                                           & gPb-ucm + Depth + Concavity Gradients & both & 62.0\% \\ \hline
+  \end{tabular}
+  \caption[Comparison of NYU Dataset Results]{Comparison of different segmentation methods on the NYU dataset using weighted overlap \textit{WOv}. LCCP results were produced with voxel size $R_{voxel} = 0.01$, seed size $R_{seed}=0.04$ and concavity tolerance angle $\beta_\text{Tresh}=10^\circ$.}
+  \label{tab:res_lccp_nyu}
+\end{table*}
+
+Example scenes in Fig.~\ref{fig:nyu_examples} show that the general object separation is still very good, which is expected from the results presented in the previous section. In contrast to the simple objects from the OSD dataset, however, in the NYU dataset the objects of interest are complex objects from various aspects of everyday life. As a consequence, these are mostly composed of multiple parts and thus our algorithm reveals interesting partitions. To give a few examples: In scene (A) the cupboard is partitioned into the top plate and its various drawers and the toilet is segmented into the flushing tank, the seat and the base. Scene (B) presents how a human is partitioned into hand, arm-bed, upper/lower part of the body and legs. For the sofas in scene (D) we get the two arm-rests, the back-rest and the seating. Note that in these cases the segments represent ``nameable regions'', which is also the case for many other segments (we discuss this further in Section~\ref{sec:nameable_parts}). It is evident that the ground truth data will then disagree with our labeling, which results in unjustified errors. For example, in scene (A) the ground truth considers the sink to be an important part, while the drawers are not labeled individually. Despite this disagreement, we do not consider either of the labelings wrong in general, but see them as different views on the data which are in many cases equally justifiable.
+
+Because we designed our algorithm to detect object parts defined only by geometry, very thin objects like the posters on the background wall in scene (C) are not recognizable. Also the challenging data quality sometimes leads the part partitioning to fail, as seen for the human in scene (E). To show how well the general idea of part partitioning using concave boundaries works, we present results for a complex object with high data quality in the next section.
+
+The quantitative results (Table~\ref{tab:res_lccp_nyu})\footnote{Updated results for \cite{Silberman:ECCV12} are available at \url{http://cs.nyu.edu/~silberman/datasets/nyu_depth_v2.html}.} show that our algorithm is able to produce good results on the challenging dataset. Despite being much simpler and without requiring learning on human annotated ground-truth, we compete with the approach from \cite{Silberman:ECCV12} when only depth information is used. Additionally, we still achieve 93\% of their score when comparing against the more complex feature spaces used in conjunction with learning-based algorithms. We should emphasize that our competitors do not aim for object parts but rather for ``whole object'' detections, specifically, those whole objects learned from this particular annotated ground truth. Conversely, our method establishes a general rule for object-ness that does not depend on this particular dataset, nor on the whims of a particular human annotator.
+
+
 
 \section{Sequential Update of Perceptual Model}
 Adding newly observed points to an existing supervoxel octree is accomplished through a three stage process. First, we must insert the points into the octree, and initialize new leaves for them if they did not exist previously. This results in an octree where leaves fall into three possible categories (illustrated in Fig.~\ref{fig:VoxelVisibility}; they are either new, observed, or unobserved in the most recent observation. Handling of new leaves is straightforward; we simply calculate adjacency relations to existing leaves and flag them as unlabeled. 

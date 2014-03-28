@@ -86,6 +86,7 @@
 \RequirePackage{booktabs} % for much better looking tables
 \RequirePackage[labelfont={rm,bf,small},textfont={rm,small},justification=RaggedRight,margin=0pt, figurewithin=section, tablewithin=section]{caption}
 \RequirePackage{foreign}
+\RequirePackage{multirow}
 
 \doublespacing
 \addtolength{\footnotesep}{\footnotesep}
