@@ -7,7 +7,7 @@ Some Quote.
 
 \chapter{Tracking Based Point Cloud Video Segmentation}
 \label{Chap:TrackingBasedSegmentation}
-\newthought{There's something to be said} for having a good opening line. 
+\lettrine[lines=3, loversize=0.3]{\textcolor{DarkBlue}T}{here's something to be said} for having a good opening line. 
 
 \section{Tracked Model Representation}
 While ideally one could directly track supervoxels themselves, this is generally not reliable due to the aperture problem seen in neural visual fields~\cite{MarrApertureProblem}; local motion can only be estimated perpendicular to a contour that extends beyond its field of view~\cite{shimojo1989}. This means that in order to properly estimate motion of supervoxels, we must extend our considered field of view significantly beyond the size of the supervoxel itself; in fact, our aperture must contain the borders of the object, otherwise pairwise association of supervoxels is indeterminate. 

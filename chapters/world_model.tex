@@ -7,8 +7,9 @@ Some Quote.
 
 \chapter{Patch-based Perceptual World Model}
 \label{Chap:WorldModel}
-\todo[inline]{Connection here - why are we moving to 3d? Why are we creating a world model?}
+\lettrine[lines=3, loversize=0.3]{\textcolor{DarkBlue}T}{he widespread availability of cheap 3D sensors} has had a profound impact on the world of computer vision. Researchers have found that they no longer need to attempt to find heuristic tricks which can create an artificial three dimensional interpretation from a two dimensional image. The advent of the Kinect (and other, related inexpensive RGB-D sensors) has allowed direct progression to high-level concepts and rules which the human mind uses when first learning to understand the real world - a completely different approach than trying to mimic the behavior of the mind when it is adapting those rules (learned from a life-time of 3D stereo data) in order to interpret some new 2D image.
 
+In this chapter we shall present our work in creating a full 3D artificial world model which can be used for higher level semantic understanding of both single frames and video. The model we present begins with point clouds, relying on the general framework set up in the Point Cloud Library \footnote{\url{http://www.pointclouds.org/}} (which we have both made use-of and contributed-to extensively as part of this work).
 \section{Voxelization}
 The resolution of a standard RGB-D camera such as the Kinect is 640x480 pixels, yielding about 300,000 points per frame. While for static image segmentation this might be an acceptable amount of data, for video segmentation it is simply too much data to process directly in reasonable run times (on standard hardware). Because of this, a common pre-processing step is to down-sample point clouds using a \textit{voxel-grid} filter, a process known as \textit{voxelization}. 
 
