@@ -1,7 +1,7 @@
 %For an example of a full page figure, see Fig.~\ref{fig:myFullPageFigure}.
 
 \chapter{Sequential Bayesian Estimation}
-
+\label{chap:SeqBayesEst}
 Sequential Bayesian estimation refers to a class of approaches for estimating a varying unknown probability density function from a time series of noisy observations. These approaches use a state space representation, in which a state vector $\mathbf{x}_t$ describes the hidden state of a dynamic system. The goal is to estimate the posterior distribution of the state given all prior observations $\mathbf{z}$, i.e., $\mathit{p}(\mathbf{x}_t|\mathbf{z}_{1:t})$. This is accomplished using a two step recursion which first generates a hypothesis of the current state conditioned on the previous state and then performs a Bayes update using the new observation. These steps are known as the prediction and filtering steps, respectively. 
 
 The prediction step estimates the current distribution given all prior observations, or

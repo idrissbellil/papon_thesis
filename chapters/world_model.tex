@@ -9,7 +9,8 @@ Some Quote.
 \label{Chap:WorldModel}
 \lettrine[lines=3, loversize=0.3]{\textcolor{DarkBlue}T}{he widespread availability of cheap 3D sensors} has had a profound impact on the world of computer vision. Researchers have found that they no longer need to attempt to find heuristic tricks which can create an artificial three dimensional interpretation from a two dimensional image. The advent of the Kinect (and other, related inexpensive RGB-D sensors) has allowed direct progression to high-level concepts and rules which the human mind uses when first learning to understand the real world - a completely different approach than trying to mimic the behavior of the mind when it is adapting those rules (learned from a life-time of 3D stereo data) in order to interpret some new 2D image.
 
-In this chapter we shall present our work in creating a full 3D artificial world model which can be used for higher level semantic understanding of both single frames and video. The model we present begins with point clouds, relying on the general framework set up in the Point Cloud Library \footnote{\url{http://www.pointclouds.org/}} (which we have both made use-of and contributed-to extensively as part of this work).
+In this chapter we shall present our work in creating a full 3D artificial world model which can be used for higher level semantic understanding of both single frames and video. The model we present begins with point clouds, relying on the general framework set up in the Point Cloud Library \footnote{\url{http://www.pointclouds.org/}} (which we have both made use-of and contributed-to extensively as part of this work). Point clouds are a useful way of representing the data obtained from RGB-D sensors. The pixel coordinates and depth value coming from the RGB-D pair can be transformed into an $(x,y,z)$ point, and the RGB information can be attached to this point.
+
 \section{Voxelization}
 The resolution of a standard RGB-D camera such as the Kinect is 640x480 pixels, yielding about 300,000 points per frame. While for static image segmentation this might be an acceptable amount of data, for video segmentation it is simply too much data to process directly in reasonable run times (on standard hardware). Because of this, a common pre-processing step is to down-sample point clouds using a \textit{voxel-grid} filter, a process known as \textit{voxelization}. 
 
@@ -260,7 +261,7 @@ Examples of over-segmentations produced by the methods are given in Figure~\ref{
 \begin{center}
 \includegraphics[width=1.01\linewidth]{figures/CVPR2013/Multiview.pdf}
 \end{center}
-   \caption[Supervoxels from Multiple Views]{Over-segmentation of a cloud from the RGB-D scenes dataset\cite{RGBDDataset}. The cloud is created by aligning 180 kinect frames, examples of which are seen on the left side. The resulting cloud has over 3 million points, which reduces to 450k points at ${R}_{voxel}=0.01m$ and 100k points with ${R}_{voxel}=0.02m$. Over-segmentation of these take 6 and 1.5 seconds, respectively (including voxelization).}
+   \caption[Supervoxels from Multiple Views]{Over-segmentation of a cloud from the RGB-D scenes dataset\cite{RGBDDataset}. The cloud is created by aligning 180 Kinect frames, examples of which are seen on the left side. The resulting cloud has over 3 million points, which reduces to 450k points at ${R}_{voxel}=0.01m$ and 100k points with ${R}_{voxel}=0.02m$. Over-segmentation of these take 6 and 1.5 seconds, respectively (including voxelization).}
 \label{fig:MultiViewCloud}
 \end{figure*}
 %------------------------------------------------------------------------
@@ -343,8 +344,6 @@ Because we designed our algorithm to detect object parts defined only by geometr
 
 The quantitative results (Table~\ref{tab:res_lccp_nyu})\footnote{Updated results for \cite{Silberman:ECCV12} are available at \url{http://cs.nyu.edu/~silberman/datasets/nyu_depth_v2.html}.} show that our algorithm is able to produce good results on the challenging dataset. Despite being much simpler and without requiring learning on human annotated ground-truth, we compete with the approach from \cite{Silberman:ECCV12} when only depth information is used. Additionally, we still achieve 93\% of their score when comparing against the more complex feature spaces used in conjunction with learning-based algorithms. We should emphasize that our competitors do not aim for object parts but rather for ``whole object'' detections, specifically, those whole objects learned from this particular annotated ground truth. Conversely, our method establishes a general rule for object-ness that does not depend on this particular dataset, nor on the whims of a particular human annotator.
 
-
-
 \section{Sequential Update of Perceptual Model}
 Adding newly observed points to an existing supervoxel octree is accomplished through a three stage process. First, we must insert the points into the octree, and initialize new leaves for them if they did not exist previously. This results in an octree where leaves fall into three possible categories (illustrated in Fig.~\ref{fig:VoxelVisibility}; they are either new, observed, or unobserved in the most recent observation. Handling of new leaves is straightforward; we simply calculate adjacency relations to existing leaves and flag them as unlabeled. 
 \begin{figure}[tb]
@@ -362,6 +361,7 @@ Once the octree voxels have been updated, we then proceed to update the supervox
 
 \section{Discussion}
 
+In this Chapter we have presented several new concepts- the octree adjacency graph, supervoxels, a segmentation method which uses supervoxels, as well as a way to sequentially update an octree with new frames of data. Additionally, we have presented quantitative and qualitative results which demonstrate the usefulness of these techniques. In particular, LCCP has demonstrated the usefulness of a patch-based adjacency-graph interpretation of 3D Point Cloud data. We believe the results we achieved stem from two core properties: the ability of supervoxels to efficiently encode local regions, and the usefulness of a 3D adjacency-graph in resolving situations which are ambiguous in a 2D representation.
 
 %% Requires fltpage2 package
 %%
