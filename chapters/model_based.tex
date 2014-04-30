@@ -12,53 +12,45 @@ Some Quote.
 The general concept of particle filtering remains the same as the 2D version discussed in Chapter \ref{Chap:VideoSegRelaxation}, with the primary changes lying in how we score individual particle predictions using the measurement model. The models have also been changed from 2D masks to 3D Point Cloud models which rely on point to point correspondence rather than a global histogram distance score. The dynamic model is an extension from 2D pixel position to real-world 3D coordinates which also include orientation. 
 
 \section{Model Representation}
-One of the main limitations of the 2D projected mask model discussed in Chapter \ref{Chap:VideoSegRelaxation} is that the masks of objects are not invariant to pose changes - in general, rotation of an object will change the shape of its mask and distribution of its color histogram. As we now have the ability to observe the full 3D shape of an object, we choose to represent objects as clusters of points which correspond to the exterior of the object. A visual representation of what such a model looks like is given in Figure \ref{fig:Object_Model}.
+One of the main limitations of the 2D projected mask model discussed in Chapter \ref{Chap:VideoSegRelaxation} is that the masks of objects are not invariant to pose changes - in general, rotation of an object will change the shape of its mask and distribution of its color histogram. As we now have the ability to observe the full 3D shape of an object, we choose to represent objects as clusters of points which correspond to the exterior of the object. A visual representation of such a model is given in Figure \ref{fig:Object_Model}.
 
 \missingfigure{Pointcloud representation of an object model}
 
-Points are stored in an object-centered reference frame, and each contain an XYZ position, an RGB color for the point, as well as a surface normal vector. That is, each point $p$ of the model $k$ consists of a nine-dimensional vector: 
+Points for objects are stored in a model-centered reference frame (which we shall denote with superscript $^m$), with each point containing an XYZ position, an RGB color for the point, as well as a surface normal vector. That is, each point $p$ of the model $k$ consists of a nine-dimensional vector: 
 
 \begin{equation} \label{eqn:point}
-p_k = [x,y,z,R,G,B,n_x,n_y,n_z],
+p^m_k = [x^m,y^m,z^m,R,G,B,n_x,n_y,n_z],
 \end{equation}
  
- and a model for an object $O_k$ consists of a vector of $n_k$ such points $p$:
+ and a model for an object $O_k$ consists of a vector of $n_k$ such points $p^m$:
  
  \begin{equation} \label{eqn:model}
- O_k = [p_0 ... p_{n_k}].
+ O^m_k = [p^m_0 ... p^m_{n_k}].
 \end{equation}
 
-It is important to note that the points of an object model given obove are model-relative - they must be transformed into the world coordinates in order to evaluate their fit to observations. This will be discussed further in the next Section.
+It is important to note that the points of an object model given above are model-relative - they must be transformed into the world coordinates in order to evaluate their fit to observations. This will be discussed further in the next Section.
 
 \section{Dynamic Model}
 \label{sec:Dynamic_model}
-In the 2D tracker presented previously, the time-dependent state vector of a particle consisted of a position shift vector $\mathbf{p}_t=[p_x,p_y]$ and a velocity vector $\mathbf{v}_t=[v_x,v_y]$. The natural extension of this to 3D is to simply add a third $p_z$ and $v_z$ element to each. Of course we should note that the $x$ and$y$ dimensions here in our 3D representation are distinct from those in 2D, which represented pixel coordinates in the image plane. Here our positional coordinates represent real-world distances from a fixed origin (typically the camera ``pin-hole'' position).
+In the 2D tracker presented previously, the time-dependent state vector of a particle consisted of a position shift vector $\mathbf{p}_t=[p_x,p_y]$ and a velocity vector $\mathbf{v}_t=[v_x,v_y]$. The natural extension of this to 3D is to simply add a third $p_z$ and $v_z$ element to each. Of course we should note that the $x$ and$y$ dimensions here in our 3D representation are distinct from those in 2D, which represented pixel coordinates in the image plane. Here our positional coordinates represent real-world distances from a fixed origin (typically the camera ``pin-hole'' position). It is also important to note that coordinates in our 3D representation are originally in a continuous space - though we discretize them using the octree model discussed in the previous Chapter. For clarity, we shall simply denote coordinates in the world reference frame with no superscript.
 
 While this straightforward extension gives us a reasonable 3D equivalent to our 2D tracked masks, we now have full 3D models, and so it makes sense to use a state vector which takes advantage of it. As such, we further extend the state vector for position and velocity to allow for rotations of the model around the object reference frame x-axis (roll - $\gamma$), y-axis (pitch - $\beta$), and z-axis (yaw - $\alpha$). This yields a position state vector for object $k$ at time $t$ of 
 \begin{equation} 
- \mathbf{x}^k_t = [x, y, z, \gamma, \beta, \alpha],
+ \mathbf{x}^k_t = [d_x, d_y, d_z, \gamma, \beta, \alpha],
 \end{equation}
  and velocity state vector 
 \begin{equation} 
  \mathbf{v}^k_t = [v_x, v_y, v_z, v_{\gamma}, v_{\beta}, v_{\alpha}].
 \end{equation}
  
-As before, motion is modeled using a constant velocity model in discrete time with uniform sampling period $\mathit{T}$, giving the dynamic model
-\begin{equation} \mathbf{x}_t = \mathbf{x}_{t-1} + \mathbf{A}\mathbf{v}_{t-1} , \end{equation}
-where
-\todo[inline]{update this matrix to give 3d transform}
-\begin{equation} \mathbf{A} = 
-\begin{bmatrix}
- 1 & \mathit{T} & 0  & 0 \\ 
- 0 & 1 & 0 & 0\\ 
- 0 & 0 & 1 & \mathit{T}\\ 
- 0 & 0 & 0 & 1
-\end{bmatrix} \end{equation}
-and noise $\mathbf{v}_t$ is assumed to be zero mean Gaussian with fixed covariance.
+As before, motion is modeled using a constant velocity model in discrete time with a variable sampling period $\mathit{T}$, giving the dynamic model
+\begin{equation} \mathbf{x}_t = \mathbf{x}_{t-1} + \mathit{T}\mathbf{v}_{t-1} + \mathbf{\omega} , \end{equation}
+
+with noise vector $\mathbf{\omega}$ assumed to be zero mean Gaussian with fixed covariance.
 
 \section{Measurement Model}
 
-As points for the model are given in a model-centered frame of reference, we must transform model points to the world frame in order to evaluate them using a standard 3D affine transformation matrix:
+As points for the model are given in a model-centered frame of reference, we must transform them to the world frame them using a standard 3D affine transformation quaternion:
 
 \begin{equation} \mathbf{B} = 
 \begin{bmatrix}
@@ -67,9 +59,37 @@ As points for the model are given in a model-centered frame of reference, we mus
  -\sin{\beta} & \cos{\beta}\sin{\gamma} & \cos{\beta}\cos{\gamma} & d_z \\ 
  0 & 0 & 0 & 1
 \end{bmatrix} \end{equation}
+ which we multiply by the extended position vector for each point in the model:
+\begin{equation} 
+  p^m_k = [x^m,y^m,z^m,1],
+\end{equation}
+ yielding new positions in the world frame for all of our model points:
+\begin{equation} 
+  \begin{bmatrix}
+    [x_1,y_1,z_1,1]^\mathsf{T} \\
+    [x_2,y_2,z_2,1]^\mathsf{T} \\
+    \vdots    \\
+    [x_N,y_N,z_N,1]^\mathsf{T}
+  \end{bmatrix}
+  =
+  \begin{bmatrix} 
+    \mathbf{B} & 0 & \ldots & 0 \\
+    0 & \mathbf{B} & \ldots &  0 \\
+    \vdots & \vdots & \ddots & \vdots \\
+    0 & 0 & \ldots & \mathbf{B} 
+  \end{bmatrix} 
+  \begin{bmatrix}
+    [x^m_1,y^m_1,z^m_1,1]^\mathsf{T} \\
+    [x^m_2,y^m_2,z^m_2,1]^\mathsf{T} \\
+    \vdots    \\
+    [x^m_N,y^m_N,z^m_N,1]^\mathsf{T}
+  \end{bmatrix}.
+\end{equation}
 
-
+Once we have our transformed points, we then must establish correspondences between each model point and a world point. This is done so that we may score how well a particular transformed model matches the current world model observation. To find these correspondences, we first compute a KD-tree in the spatial dimensions for the world model points. This allows us to search efficiently for the nearest point to each transformed model point. We create this tree for the world model rather than the transformed model, even though the former has more points, as there is only one world. Computing it for the models, on the other hand would require doing it for each particle, and each model. Additionally, computing it for the world allows us to take advantage of sampling strategies (discussed later in this Chapter) which significantly reduce our run-time complexity. 
 \section{KL-Divergence Adaptation}
+
+
 \section{Stratified Correspondence Sampling}
 \todo[inline]{Provide simple experiment showing quality of track (maybe on VR Data) vs number of samples and particles.}
 \todo[inline]{Also show result with occlusion? With some pure random samples added in?}
