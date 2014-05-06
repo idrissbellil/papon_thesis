@@ -116,15 +116,56 @@ where we follow the convention given Section\ref{subsec:Features}. That is, $\mu
 and the group-velocity can be computed using Equation~\ref{Eqn:group_vel}.
 
 \section{Stratified Correspondence Sampling}
-\todo[inline]{Provide simple experiment showing quality of track (maybe on VR Data) vs number of samples and particles.}
-\todo[inline]{Also show result with occlusion? With some pure random samples added in?}
+While the tracking method discussed above works on recorded data, it can only achieve ~10 frames per second on current hardware for single objects. Moreover, speed of tracking is highly dependent on the size of object models as well as voxel resolution used. With this in mind, we use a sampling scheme which selects a limited number of points from the model to transform and test. By doing this, we achieve linear asymptotic time complexity for the particle filter with respect to the number of particles - there is no dependence on the number of points in the models or the voxel resolution used. The only step which is dependent on the number of input points is the KD-tree construction, but this is only done once (for the world model), is done as a pre-processing step regardless (for normal computation), and is computed by a highly optimized external library.
+
+The sampling scheme is as follows. We set a constant number of sample points per particle $N_s$, and then divide the model into $N_t$ strata, such that $N_t = N_m / N_s$, where $N_k$ is the number of points in model $k$. We then select a point from each stratum using uniform sampling, and proceed to transform and score it as described in previous Sections. As an additional step, we also select $\frac{N_s}{2}$ points uniformly from the entire model. Using strata ensures we have coverage of the whole model, while sampling randomly from the entire distribution improves occlusion performance. 
+
+\todo[inline]{Figure showing point model and selected points}
+
+While sampling will tend to produce noisier tracking results for low $N_s$, it also greatly reduces the computational complexity. This allows one to greatly increase the number of particles for a given desired frame-rate. In the results presented next we shall demonstrate that this trade-off allows us to significantly increase accuracy for a given frame-rate and reduces run-time complexity to the point that we can track 6 DoF pose for multiple objects in real-time.   
+
 \section{Results on Virtual-Reality Data}
+
+Before we present results on real data, we shall first quantify tracker performance using Virtual-Reality (VR) data. VR data is primarily useful because it allows us to easily obtain accurate ground-truth data for object tracks and poses - something that is generally not possible with real data \cite{Rossmann2012d}. With this in mind we have developed a VR setup and benchmark \cite{VR_Benchmark_Paper} which simulates the platform we shall use in the real data shown later. The virtual platform has many simulated cameras, but in these tests we use two simulated Kinect RGB-D sensors with overlapping fields of view covering the entire work area. The sensor simulation can generate benchmark images and point clouds with controlled levels of quality, from ``ideal'' to ``real''. \footnote{Here, ``real'' is defined by the similarity of outcomes when real and simulated data are processed by libraries such as OpenCV and PCL, e.g. color histograms (RGB deviation, RGB saturation), edge detection, SURF feature detection and RANSAC feature similarity.} In the following tests we used the standard depth error of the Kinect as our lowest noise level and compared the algorithms with less accurate testdata.
+
+\todo[inline]{Add figure of virtual reality platform}
+
+Once again, our benchmarking task is assembly of the well-established ``Cranfield'' set \cite{Collins1985,Schou2012,Martinez2014} (see Fig. \ref{fig:cad_models}).The actual assembly actions in VR are carried out and tracked with a data-glove, generating accurate, objective ground-truth data, e.g. exact object positions as well as detailed information on the timing and existence of object manipulations and spatial relations between manipulated objects. Comparisons of real and virtual images were made in the project FastMap \cite{Rossmann2012b} and showed that artificial and real images led to very similar result in computer vision algorithms. 
+
+
+In our first experiment, we shall demonstrates the effectiveness of our stratified sampling strategy. We used a simple scenario in which we must track two bolts as they are picked up and inserted into a faceplate. To simplify the analysis, we fix the run-time variable by setting a desired frame-rate of 20fps \footnote{All these experiments were run on the same machine - an i7 980x with 32g of memory}, and then determined experimentally the number of particles for which this frame rate was sustainable at different degrees of sampling. Degree of sampling is simply the ratio of the number of points sampled to the number of points present in the model, $\frac{N_s}{N_m}$. Table \ref{table:timing} gives the average frame rates and standard deviation measured during the runs. Figure \ref{TODOFIGURE} shows average error rates for the different degrees of sampling. Additionally, Figure \ref{TODOFIGURE} shows the affect on error and run time of increased particle number for fixed degrees of sampling. Finally, Figure \ref{fig:CombinedNoNoise} gives an example of what the tracked output looks like versus ground truth - it is evident that the tracker is able to follow the objects quite well in terms of translation. Rotations, on the other hand, are much noisier, due to the rotational symmetries present in the tracked object (the bolt).  
+
+\todo[inline]{Screenshots from this scenario}
+
+\begin{table}
+\caption{Measured frame rates of tracker during tracking of 2 bolt VR scenario.}
+\label{table:timing}
+\begin{center}
+\begin{tabular}{|l|c|c|c|c|c|c|c|}
+\hline
+Degree of sampling &  1.0  & 0.8 & 0.6 & 0.4 & 0.2 & 0.1 \\
+\hline\hline
+Particles  & 0 & 0 & 0 & 0 & 0 & 0\\
+Avg time per frame (ms) & 0 & 0 & 0 & 0 & 0 & 0\\
+Std. Deviation (ms)     & 0 & 0 & 0 & 0 & 0 & 0\\
+Avg Framerate (fps)     & 0 & 0 & 0 & 0 & 0 & 0\\
+\hline
+\end{tabular}
+\end{center}
+\end{table}
+
+\todo[inline]{Plot showing track error vs degree of sampling. Also show number of particles on y axis. Fixed run-time. }
+\todo[inline]{Plot showing track error vs degree of sampling. Also show number of particles on y axis. Fixed run-time. }
+
+
 \begin{figure*}[!ht]
   \centering
   \includegraphics[width=\linewidth]{figures/Tracking/CombinedNoNoise.pdf}
   \caption[Tracked Output vs Ground Truth Artificial Sequence]{Tracked Output vs Ground Truth Artificial Sequence. The top panel shows position in terms of XYZ displacement and the bottom shows rotation in terms of geodesic. The location is generally tracked quite well, while the rotation is noisy due to the rotational symmetry of the two tracked objects (a bolt-angular and shaft).}
   \label{fig:CombinedNoNoise}
 \end{figure*}
+
+Figure \ref{fig:ActionSegmentation} demonstrates one intended application of the tracking - recognizing the different actions of the Cranfield assembly sequence. In the sequence all consistently tracked objects are represented by graphs in which nodes represent manipulated objects and edges indicate whether two objects touch each other or not. We can discretize the graph sequence into decisive key frames, which occur whenever a new node or edge is formed or an existing edge or node is deleted. Sequences of all extracted key frames are employed for measuring semantic similarities, yielding action recognition as described in \cite{Aksoy2010,Aksoy2011}. Fig. \ref{fig:ActionSegmentation} depicts sample key frames with tracked objects (each is indicated with a different color) and corresponding graphs at which a new action is recognized. 
 
 \begin{figure*}[!ht]
   \centering
@@ -134,5 +175,7 @@ and the group-velocity can be computed using Equation~\ref{Eqn:group_vel}.
 \end{figure*}
 
 \section{Results on Real Data}
-In this section we present results on 10 different recordings of humans assembling the Cranfield benchmark. Recordings here 
+In this section we present results on 10 different recordings of humans assembling the Cranfield benchmark. Recordings were made on the MARVIN platform at the University of Southern Denmark, and use 2 Kinect RGB-D cameras \footnote{It is well-known that multiple Kinect sensors sharing a common field of view will cause IR interference, resulting in poor depth reconstructions. A known solution, which the platform incorporates, is the use of vibrating motors mounted on the Kinect sensors \cite{Butler2012}. This method has been shown to effectively blur out the noisy contributions of external sensors, while maintaining a high depth reconstruction quality.}, positioned in the same place as in the VR simulation. The 10 recordings consist of 2 assemblies each by 5 different people, where the people were following assembly instructions presented by the planning system of the IntellAct project. A description of the planner is beyond the scope of this work (we refer the reader to \ref{TODOPLANNER}), but for our purposes we just need to know that the order of assembly is random. 
+
+As we do not have ground truth poses for this dataset, we evaluate tracker performance by comparing actual human actions to recognized actions. That is, we check that the final tracked positions for the objects is the correct one for the assembly task.
 

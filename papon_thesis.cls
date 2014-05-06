@@ -17,15 +17,19 @@
 % Required packages
 \RequirePackage{watermark}
 \RequirePackage{graphicx}
-\RequirePackage{hyperref}
-\hypersetup{
-  linktocpage,
-    colorlinks,
-    citecolor=Crimson,
-    filecolor=black,
-    linkcolor=black,
-    urlcolor=Crimson,
-}
+\RequirePackage[bookmarks, 
+                colorlinks=true, 
+                citecolor=Crimson,
+                filecolor=black,
+                linkcolor=blue,
+                urlcolor=Crimson,
+                pdfdisplaydoctitle=true,
+                pdftitle={Semantic analysis of image sequences using computer vision methods}, pdfauthor={Eren Erdal Aksoy}, pdfsubject={Dissertation},
+                pdfkeywords={ Semantic Scene Graphs, Object Action Complexes, Event Chains, Learning by Observation}
+                ]{hyperref} 
+
+
+
 
 \RequirePackage[centertags]{amsmath}
 \RequirePackage{amssymb}
