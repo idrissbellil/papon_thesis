@@ -7,38 +7,44 @@ Some Quote.
 
 \chapter{Tracking Based Point Cloud Video Segmentation}
 \label{Chap:TrackingBasedSegmentation}
-\lettrine[lines=3, loversize=0.3]{\textcolor{DarkBlue}T}{here's something to be said} for having a good opening line. 
+\lettrine[lines=3, loversize=0.3]{\textcolor{DarkBlue}S}{o far, we have presented} a 2D particle-filter based VOS method, developed a 3D point-cloud based world-model, and shown how it is possible to track within this model using particle filters. What remains is to bridge the gap between the tracked model results presented in the previous Chapter, and the supervoxel model presented in the preceding one. There are many avenues available through which to proceed in doing this, and which one is optimal remains an open question. In this Chapter we shall describe the avenue which we pursued, show our results, and discuss where future research should lead.
+
+Before we begin, it will probably be helpful if we show visually exactly what we are trying to achieve. Figure \ref{fig:TODOFIGURE} gives such an outline; the core idea is that we want to have a full segmentation of each frame.  While the tracking we have presented estimates a 6DoF pose for models in each frame, we now want to label every observed voxel (or supervoxel - which amounts to the same thing). Moreover, we want to use tracking as the basis for this labeling, due to its ability to maintain object identities through occlusions, sudden movements, and other difficult situations. 
+\todo[inline]{Figure showing supervoxels, tracked models, associations to achieve segmentation}
+
 
 \section{Tracked Model Representation}
-While ideally one could directly track supervoxels themselves, this is generally not reliable due to the aperture problem seen in neural visual fields~\cite{MarrApertureProblem}; local motion can only be estimated perpendicular to a contour that extends beyond its field of view~\cite{shimojo1989}. This means that in order to properly estimate motion of supervoxels, we must extend our considered field of view significantly beyond the size of the supervoxel itself; in fact, our aperture must contain the borders of the object, otherwise pairwise association of supervoxels is indeterminate. 
+The first issue that must be addressed is deciding at what ``level'' the tracking should be done - at an object level, or at the supervoxel level. While ideally one could directly track supervoxels themselves, this is generally not feasible due to the aperture problem seen in neural visual fields~\cite{MarrApertureProblem}; local motion can only be estimated perpendicular to a contour that extends beyond its field of view~\cite{shimojo1989}. This means that in order to properly estimate motion of supervoxels, we must extend the field of view considered significantly beyond the size of the supervoxel itself; in fact, our aperture must contain the borders of the object in question, otherwise pairwise association of supervoxels is indeterminate. 
 
-As such, we first merge supervoxels into contiguous higher level object groupings. For this work, we use a plane fitting and removal algorithm to remove supporting surfaces, followed by a euclidean clustering of the remaining supervoxels as in \cite{Radu3dIsHere}. It should be stressed that the overall tracking itself is independent of the segmentation used to initialize objects; one could easily use a model-based segmentation, or even a 2D classifier scheme on the original RGB image. Regardless of the segmentation used, the supervoxel clusters found are used to initialize the models which will be tracked.
+\todo[inline]{Figure showing aperture problem?}
+
+As such, we must track higher level groupings - that is to say either objects, or at least object parts. For the experiments we present later in this chapter, we use a simple plane fitting and removal algorithm to remove supporting surfaces, followed by a euclidean clustering of the remaining supervoxels as in \cite{Radu3dIsHere}. This was done to simplify the experiments, though we should stress that any clustering method could be used to initialize the tracked object models, and indeed, one avenue of current research is using the LCCP segmentation presented in Chapter \ref{Chap:WorldModel} to initialize (and perhaps re-initialize) the models. In any case, regardless of the segmentation used, the supervoxel clusters are used to initialize the models which will be tracked. 
+
+Similar to the previous Chapter, models consists of clouds - though now we use supervoxels rather than voxels, as seen in Figure~\ref{fig:TODOFIGURE}. Other than this consideration, the models are essentially identical to those given in Equations \ref{eqn:point} and \ref{eqn:model}. Just as each voxel in those equations is an average of the many points contained within the voxel, now each supervoxel's centroid is the average of all the voxels it contains. The main difference between the two on a local level is that supervoxels are not uniform in shape. Because of this, an important component of the supervoxel-based model which is not considered in the voxel version is the supervoxel connectivity graph. Additionally, supervoxels also have the additional information provided by a label - this is particularly important for non-moving objects, whose supervoxel labels will generally not change.
+
+\todo[inline]{Figure showing points, voxels, and supervoxels (with connectivity) in a model.}
 
 \section{Supervoxel-Based Particle Filters}
-Tracking of the segmented models is accomplished using a bank of independent parallel particle filters. The models consist of clouds of supervoxels, and observations are the supervoxels produced using the persistent scheme discussed in Section~\ref{sec:Supervoxels}. The observation model measures distance in a feature space of spatial distance, normals, color (in HSV space), and labels. Weights of predicted states ( $x,y,z$, roll, pitch, yaw) are measured by associating observed supervoxels with nearest supervoxels from the transformed models, and then measuring total distance in the feature space as (\ref{eqn:PFCoherence}). That is, the weight $w^k_i$ of particle $i$ belonging to object $k$ (of size $N_k$) with state $x_i$ is the sum of the products of the coherences $W$,
+Tracking of the segmented models is accomplished using a bank of independent parallel particle filters, just as in the previous chapter. As our models now consist of supervoxels, so too must our observations - thus we use the supervoxels produced using the persistent scheme discussed in Chapter~\ref{Chap:WorldModel}. The observation model measures distance in a feature space of spatial distance, normals, color (in HSV space), and labels. Weights of predicted states $\mathbf{x}^j_t = [d_x, d_y, d_z, \gamma, \beta, \alpha]$ are measured by associating supervoxels from the transformed models to the observed supervoxels nearest in space. Particles are then weighted by measuring total distance in feature space, just as in (\ref{eqn:distance}), with the addition of a binary label term,
 \begin{equation}
-\label{eqn:PFCoherence}
-w^k_{i} \sum_{p,q \in x_i} W_d W_{HSV} W_n W_l ~~.
-\end{equation}
-Coherences are calculated for each correspondence pair between model supervoxel $p$ and observed supervoxel $q$,
-\begin{equation}
-\label{eqn:DistTerms}
- \begin{array}{lcl}
- W_d & = & \frac{1}{1 + \frac{ \| p - q \|^2}{3 {R}_{seed}^{2}}} \\
- W_{HSV} & = & \frac{1}{1 + \|p_{HS}-q_{HS}\|^2} \\
- W_n & = & \frac{1}{ 1 + \left| 1 - n_p \cdot n_q \right| } \\
- W_l & = & \begin{cases} 1, & L_p = L_q \\ 
-                         \frac{N_k-1}{N_k}, & L_p \neq L_q 
+  \label{eqn:dist_labels}
+    W_L =  \begin{cases} 1, & L_p = L_{p^*} \\ 
+                         \frac{N_k-1}{N_k}, & L_p \neq L_{p^*} 
            \end{cases} 
- \end{array} ,
 \end{equation}
 
-where supervoxel $q$ has label $L_q$, normal $n_q$, and hue \& saturation $p_{HS}$.
+which results in the augmented distance function
 
-KLD sampling \cite{KLDParticleFilter} is used to dynamically adapt the number of particles to the certainty of predictions. As matching supervoxel labels gives a high certainty of a correct prediction, objects which are not moving, and therefore have static supervoxel labels, need very few particles for accurate tracking. Details of the particle filters themselves are beyond the scope of this work, but we refer the reader to \cite{KLDParticleFilter} for an in-depth description of their operation. For this work, it is sufficient to understand that the particle filters yield independent predictions of 6DoF object state, allowing a transformation of the model to the current time-step - roughly aligning it with the currently observed supervoxels.  
+\begin{equation} \label{eqn:augmented_distance}
+  \tilde{w}^j = \sum_{1}^{\eta} \frac{1}{1 + \frac {\mu \lVert \mathbf{p}^j_{xyz} - \mathbf{p}^*_{xyz} \rVert} {R_{voxel}} +  \frac{\lambda D_c(p^j_{RGB},p^*_{RGB})}{m} +   \epsilon \lVert \mathbf{p}^j_{n_x n_y n_z} - \mathbf{p}^*_{n_x n_y n_z} \rVert + \nu  W_L}.
+\end{equation}
+
+As before, we adopt the notation $p$ for the supervoxel and $p*$ for its corresponding supervoxel in the observation.
+
+KLD sampling \cite{KLDParticleFilter} is used to dynamically adapt the number of particles to the certainty of predictions. As matching supervoxel labels gives a high certainty of a correct prediction, objects which are not moving, and therefore have static supervoxel labels, need very few particles for accurate tracking. The details of KLD sampling are beyond the scope of this work, but we refer the reader to \cite{KLDParticleFilter} for an in-depth description of their operation. Outside of KLD sampling and the differences in the measurement function noted above, the particle filters function just as described in the previous chapter. The end result at each time-step are independent predictions of 6DoF object state, allowing a transformation of the model roughly aligning it with the currently observed supervoxels.  
 
 \section{Association by Joint Energy Minimization}
-The final step in the tracking process is to associate the observed supervoxels to the predictions coming from the particle filters, that is, we need to solve the multiple target data association problem. This is accomplished using an energy minimization which seeks to find an optimal global association of supervoxels to predictions. To do this, we first create a list of all observed supervoxels which lie within a radius $R_{seed}$ of each predicted supervoxel coming from the particle filters (see Fig.~\ref{fig:Association}). Then we determine all supervoxels which could only be associated with one possible object, associate them, and remove them from further consideration.
+The additional step that we must take to extract a full segmentation (rather than only object tracks) is to associate the observed supervoxels to the predictions coming from the particle filters. Therefore we must solve the multiple target data association problem. This is accomplished using an energy minimization which seeks to find an optimal global association of supervoxels to predictions. To do this, we first create a list of all observed supervoxels which lie within a radius $R_{seed}$ of each predicted supervoxel coming from the particle filters (see Fig.~\ref{fig:Association}). Then we select all supervoxels which could only be associated with one possible object, associate them, and remove them from further consideration.
 
 \begin{figure}[tb]
   \centering
@@ -47,20 +53,20 @@ The final step in the tracking process is to associate the observed supervoxels 
   \label{fig:Association}
 \end{figure}
 
-To associate the remaining observed supervoxels, we determine which objects are competing for them, and then find the predicted supervoxel from each object which lies closest to them in the feature space (using spatial location, normals, and color as in (\ref{eqn:Distance})). We adopt a RANSAC-like approach, similar to \cite{EnergyBasedMultiModel}, to sample from the set of possible associations and determine a global association which best aligns the predictions to the observed supervoxels. Additionally, we use a weighted sampling strategy where the likelihood of assigning object $k$ as the label $L$ of supervoxel $q$ falls off with increasing distance from the object centroid $C_k$
+To associate the remaining observed supervoxels, we determine which objects are competing for them, and then find the predicted supervoxel from each object which lies closest to them in the feature space (using spatial location, normals, and color as in (\ref{augmented_distance})). We adopt a RANSAC-like approach, similar to \cite{EnergyBasedMultiModel}, to sample from the set of possible associations and determine a global association which best aligns the predictions to the observed supervoxels. Additionally, we use a weighted sampling strategy where the likelihood of assigning object $k$ as the label $L$ of supervoxel $p$ falls off with increasing distance from the object centroid $C_k$
 \begin{equation}
  \label{eqn:WeightSampling}
- \mathcal{L}(L_q=k | C_k) = \frac{1}{C_k}.
+ \mathcal{L}(L_p=k | C_k) = \frac{1}{C_k}.
 \end{equation}
 
-To score a set of assignments, we compute a global energy, given in~(\ref{eqn:Energy}). Each global label association $\mathcal{A}$ consists of local associations $a$ which assign an object label $k$ to each observed supervoxel $q$. The first summation term, $ \sum_{p}{\|p_k - q\|} $, measures error in feature space between the observed supervoxel and the closest supervoxel in its associated predicted object $p_k$. 
+To score a set of assignments, we compute a global energy, given in~(\ref{eqn:Energy}). Each global label association $\mathcal{A}$ consists of local associations $a$ which assign an object label $k$ to each observed supervoxel $p$. The first summation term, $ \sum_{p}{\|p^*_k - p\|} $, measures error in feature space between the observed supervoxel and the closest supervoxel in its associated predicted object $p^*_k$. 
 
 \begin{equation}
 \label{eqn:Energy}
-{E}_\mathcal{A} =\prod_{a\in\mathcal{A}}{\Delta_k} \left( \sum_{p}{\|p_k - q\|} + \lambda \sum_{(q,q')\in \mathcal{N} }\delta(L_q \not= L_{q'}) \right) 
+{E}_\mathcal{A} =\prod_{a\in\mathcal{A}}{\Delta_k} \left( \sum_{p}{\|p^*_k - p\|} + \lambda \sum_{(p,p')\in \mathcal{N} }\delta(L_p \not= L_{p'}) \right) 
 \end{equation}
 
-The second summation is a smoothing prior which considers the adjacency graph of observed supervoxels. For every observed supervoxel, we compare its assigned label $L_q$ to the label of all supervoxels $q'$ which lie within its adjacency neighborhood $\mathcal{N}$. We adopt the Potts model as in \cite{Boykov2001}, where $\delta(\dot)$ is 1 if the specified condition holds, and 0 otherwise, and $\lambda$ is a weighting coefficient which controls the importance given to spatial continuity of labels.
+The second summation is a smoothing prior which considers the adjacency graph of observed supervoxels. For every observed supervoxel, we compare its assigned label $L_p$ to the label of all supervoxels $p'$ which lie within its adjacency neighborhood $\mathcal{N}$. We adopt the Potts model as in \cite{Boykov2001}, where $\delta(\dot)$ is 1 if the specified condition holds, and 0 otherwise, and $\lambda$ is a weighting coefficient which controls the importance given to spatial continuity of labels.
 
 Finally, the multiplicative term $\prod_{a\in\mathcal{A}}{\Delta_k}$ controls for the expansion or contraction of object volumes through the number of observed supervoxels associated with them. $\Delta_k$ penalizes for changes in volume by increasing the energy for deviations from unity in the ratio of observed supervoxels assigned to an object $\hat{N}_k$ with the number in the object model itself $\hat{N}_k$, that is
 
@@ -94,9 +100,8 @@ x'_{i \in L} = (1-\epsilon) x_i + \epsilon \hat{x}~.
 
 For this work, we found that an $\epsilon$ of $0.5$ effectively removes noise (jitter) introduced by the replacement of the tracked model. Additionally, we correct the internal motion model of the particle filters to correspond to the new updated state.
 
-\section{Occlusion Handling}
 \section{Experimental Results}
-In order to demonstrate the usefulness of the proposed method, in this Section we provide results from two successful applications. Both applications use the Cranfield scenario \cite{collins1984development}, a benchmark developed for assessing performance of assembly robot systems. Fig.~\ref{fig:Trajectories} and the supplementary material\footnote{See also http://www.youtube.com/watch?v=0dVzWgW6Bs8 and https://www.youtube.com/watch?v=GjmUhm2JitU for longer versions.} show the results of tracking and segmentation (only the pegs are shown in Fig.~\ref{fig:Trajectories} to avoid clutter) using our Cranfield pieces. It can be seen that the algorithm is able to successfully track 6DoF states through the whole assembly task, even maintaining proper tracks for the pieces when they are fully occluded.
+In order to demonstrate the usefulness of the proposed method, in this Section we first provide results from two successful applications. Both applications use the Cranfield scenario \cite{collins1984development} as in the previous chapter. Figure~\ref{fig:Trajectories} show the results of tracking and segmentation (only the pegs are shown in Figure~\ref{fig:Trajectories} to avoid clutter) using our Cranfield pieces. It can be seen that the algorithm is able to successfully extract full segmentation throughout the video.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Imitation of Trajectories for Robot Manipulation}
@@ -114,8 +119,9 @@ To demonstrate this, we applied our tracking algorithm to obtain human motion tr
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsection{Semantic Summaries of Actions}
-A fundamental task for intelligent autonomous robots is the problem of encoding long chain manipulations in a generic way, for use in tasks such as learning and recognition. As a demonstration of the usefulness of the proposed tracking framework, we use a recently introduced novel Semantic Event Chain (SEC) approach \cite{Aksoy11} which converts each segmented scene to a graph: nodes represent segment (i.e. object) centers and edges indicate whether two objects touch each other or not. By using an exact graph matching technique the SEC framework discretizes the entire graph sequence into decisive main graphs. A new main graph is identified whenever a new node or edge is formed or an existing edge or node is deleted. Thus, each main graph represents a “key frame” in the manipulation sequence. Figure~\ref{fig:SECGraphs} shows a few detected sample key frames from the long Cranfield action. While the complete action has in total 1453 frames, the SEC representation reduces it to just 35 key frames, each of which 
-represents a topological change in the scene.
+\todo[inline]{Need to show results on the Odense recordings instead, but how to show it makes a difference. Maybe use it to do object classification at the end based on what the tracked action was? Or just say we generate SECs without needing object models.}
+
+A fundamental task for intelligent autonomous robots is the problem of encoding long chain manipulations in a generic way, for use in tasks such as learning and recognition. As a demonstration of the usefulness of the proposed tracking framework, we use a recently introduced novel Semantic Event Chain (SEC) approach \cite{Aksoy11} which converts each segmented scene to a graph: nodes represent segment (i.e. object) centers and edges indicate whether two objects touch each other or not. By using an exact graph matching technique the SEC framework discretizes the entire graph sequence into decisive main graphs. A new main graph is identified whenever a new node or edge is formed or an existing edge or node is deleted. Thus, each main graph represents a “key frame” in the manipulation sequence. Figure~\ref{fig:SECGraphs} shows a few detected sample key frames from the long Cranfield action. While the complete action has in total 1453 frames, the SEC representation reduces it to just 35 key frames, each of which represents a topological change in the scene.
 
 \begin{figure*}[ht!]
   \centering
@@ -123,24 +129,3 @@ represents a topological change in the scene.
   \caption[Cranfield Key Frames]{A few example key frames extracted from the long Cranfield action. Numbered nodes represent interacting objects, while edges show touching relations between objects. Each keyframe represents a topological change in the scene - here we show 4 of the 35 keyframes.}
   \label{fig:SECGraphs}
 \end{figure*}
-
-\section{Hierarchy of Temporal Hypotheses}
-\section{Hypothesis Pruning}
-\section{Extracting a Realization of Perceptual Model}
-\section{Experimental Results}
-
-%\begin{figure}
-%\includegraphics[width=\textwidth]{figures/fig1}
-%\caption[Short figure name.]{This is a figure that floats inline and here is its caption.
-%\label{fig:myInlineFigure}}
-%\end{figure}
-
-
-
-%% Requires fltpage2 package
-%%
-% \begin{FPfigure}
-% \includegraphics[width=\textwidth]{figures/fullpage}
-% \caption[Short figure name.]{This is a full page figure using the FPfigure command. It takes up the whole page and the caption appears on the preceding page. Its useful for large figures. Harvard's rules about full page figures are tricky, but you don't have to worry about it because we took care of it for you. For example, the full figure is supposed to have a title in the same style as the caption but without the actual caption. The caption is supposed to appear alone on the preceding page with no other text. You do't have to worry about any of that. We have modified the fltpage package to make it work. This is a lengthy caption and it clearly would not fit on the same page as the figure. Note that you should only use the FPfigure command in instances where the figure really is too large. If the figure is small enough to fit by the caption than it does not produce the desired effect. Good luck with your thesis. I have to keep writing this to make the caption really long. LaTex is a lot of fun. You will enjoy working with it. Good luck on your post doctoral life! I am looking forward to mine. \label{fig:myFullPageFigure}}
-% \end{FPfigure}
-% \afterpage{\clearpage}
