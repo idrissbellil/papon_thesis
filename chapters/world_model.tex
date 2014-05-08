@@ -47,13 +47,14 @@ The resolution of a standard RGB-D camera such as the Kinect is 640x480 pixels, 
 \label{fig:stanford_bunny}
 \end{figure}
 
-
-\newthought{There's something to be said} for having a good opening line. 
 \section{Octree Adjacency Graph}
 \label{subsec:Adjacency}
 Adjacency is a key element of the proposed method, as it ensures that supervoxels do not flow across object boundaries which are disconnected in space. There are three definitions of adjacency in a voxelized 3D space; 6-,18-, or 26-adjacent. These share a face, faces or edges, and faces, edges, or vertices, respectively. In this work, whenever we refer to adjacent voxels, we are speaking of 26-adjacency. 
 
 As a preliminary step, we construct the adjacency graph for the voxel-cloud. This can be done efficiently by searching the voxel kd-tree, as for a given voxel, the centers of all 26-adjacent voxels are contained within $\sqrt{3}*R_{voxel}$. ${R}_{voxel}$ specifies the voxel resolution which will be used for the segmentation (for clarity, we shall simply refer to discrete elements at this resolution as voxels). The adjacency graph thus constructed is used extensively throughout the rest of the algorithm.
+
+
+\todo[inline]{We need to introduce supervoxels properly}
 
 \section{Spatial Cluster Seeding}
 \label{subsec:Seeding}

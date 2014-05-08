@@ -10,7 +10,7 @@
 % --------------------------------------------------------------------
 
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesClass{papon_thesis}[2013/01/06 v0.1 Jeremie Papon Thesis Class - based off Harvard Thesis Class]
+\ProvidesClass{papon_thesis}[2014/05/06 v0.2 Jeremie Papon Thesis Class - based off Harvard Thesis Class]
 \LoadClass[12pt, twoside, a4paper]{book}
 
 
@@ -24,8 +24,8 @@
                 linkcolor=blue,
                 urlcolor=Crimson,
                 pdfdisplaydoctitle=true,
-                pdftitle={Semantic analysis of image sequences using computer vision methods}, pdfauthor={Eren Erdal Aksoy}, pdfsubject={Dissertation},
-                pdfkeywords={ Semantic Scene Graphs, Object Action Complexes, Event Chains, Learning by Observation}
+                pdftitle={Extraction of Objects from Visual Streams}, pdfauthor={J\'{e}r\'{e}mie Papon}, pdfsubject={Dissertation},
+                pdfkeywords={Visual Tracking, Object Segmentation, Video Segmentation, Pointclouds}
                 ]{hyperref} 
 
 
