@@ -21,7 +21,7 @@
                 colorlinks=true, 
                 citecolor=Crimson,
                 filecolor=black,
-                linkcolor=blue,
+                linkcolor=DarkBlue,
                 urlcolor=Crimson,
                 pdfdisplaydoctitle=true,
                 pdftitle={Extraction of Objects from Visual Streams}, pdfauthor={J\'{e}r\'{e}mie Papon}, pdfsubject={Dissertation},
@@ -30,7 +30,7 @@
 
 
 
-
+\RequirePackage[acronym]{glossaries}
 \RequirePackage[centertags]{amsmath}
 \RequirePackage{amssymb}
 \RequirePackage[numbers, comma, sort&compress]{natbib}
