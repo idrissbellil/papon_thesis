@@ -1,3 +1,13 @@
 % the abstract
+\lettrine[lines=2, loversize=0.3]{\textcolor{DarkBlue}T}{he ability to segment scenes} into semantically meaningful entities is essential for any intelligent autonomous robot system. Segmentation is a precursor to high-level behavior, such as identification of objects, scene understanding, and task planning. Tracking segmented entities over time further enriches this knowledge by extending it to the action domain. Unsupervised segmentation of video streams increases the flexibility of autonomous robotic systems by allowing them to learn from observations without the constraints of pre-defined object and domain knowledge.
 
-Abstract text.
+This work proposes to establish a closed loop between \emph{\gls{vos}} and \emph{\gls{mtt}}, using a methodology we term \emph{\gls{dsst}}. We show how such a framework can be used to distill basic semantic understanding of complex actions in real-time, without the need for a-priori object knowledge. Importantly, this framework is highly robust to occlusions, fast movements, and deforming objects. This thesis has four key contributions, each of which lead towards fast and robust \gls{dsst}.
+
+First, we present \emph{Video Segmentation by Relaxation of Tracked Masks}, which demonstrates the feasibility of \gls{dsst} in 2D video. The essential aspect of this proof of concept is the core feedback loop between \gls{vos} and \gls{mtt}. This is accomplished using a sequential Bayesian technique to generate predictions which are used to seed a segmentation kernel, the results of which are used to update tracked models. 
+
+The second contribution consists of a 3D voxel clustering technique, \gls{vccs}, which makes use of a novel adjacency octree structure to efficiently cluster 3D point cloud data. These clusters of voxels, or \emph{supervoxels}, and their adjacency graph are used to maintain a world model which serves as an internal buffer for observations for trackers. Importantly, this world model uses ray-tracing to ensure that it does not delete occluded voxels as new frames of data arrive.
+
+The third contribution is an extension of particle filtering to point clouds that uses a stratified sampling technique to achieve simultaneous real-time 6 \gls{dof} tracking of multiple objects. The final contribution is \emph{\gls{pas}}, which implements \gls{dsst} in 3D by performing a joint optimization on the 3D tracker outputs to determine a fully segmented point cloud. 
+
+Each of these contributions has been implemented in live systems and evaluated in several different applications. When possible, we have performed quantitative evaluation on existing benchmarks to demonstrate state-of-the-art tracking and segmentation performance. To evaluate the performance of the 3D \gls{dsst}, we have developed a novel benchmarking technique which evaluates semantic understanding rather than pixel-level correspondence to an artificial ground-truth.
+
