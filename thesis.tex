@@ -4,6 +4,7 @@
 \documentclass{papon_thesis}
 \usepackage{todonotes}
 %\usepackage[]{showkeys}
+\makeglossaries
 
 \begin{document}
 \watermark {DRAFT COPY ONLY}
@@ -19,12 +20,13 @@
 \tableofcontents
 \include{related_publications}
 \listoffigures
-\makeglossaries
+\listoftables
+\printglossaries
 %\dedicationpage
 \acknowledgments
 
 \onehalfspacing
-
+\mainmatter
 % include each chapter...
 \include{chapters/introduction}
 \include{chapters/video_seg_relaxation}
@@ -42,6 +44,8 @@
 \addcontentsline{toc}{chapter}{References}
 \bibliographystyle{plainnat}
 %\include{endmatter/colophon}
+
+\onehalfspacing
 
 \begin{appendices}
 \include{chapters/oculus_appendix}

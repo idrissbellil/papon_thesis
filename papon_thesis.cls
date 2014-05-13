@@ -13,7 +13,6 @@
 \ProvidesClass{papon_thesis}[2014/05/06 v0.2 Jeremie Papon Thesis Class - based off Harvard Thesis Class]
 \LoadClass[12pt, twoside, a4paper]{book}
 
-
 % Required packages
 \RequirePackage{watermark}
 \RequirePackage{graphicx}
@@ -53,11 +52,12 @@
 \preto\section{%
   \ifnum\value{section}=0\addtocontents{toc}{\vskip10pt}\fi
 }
-\preto\figure{%
-  \ifnum\value{figure}=0\addtocontents{lof}{{\bfseries Chapter \thechapter\vskip10pt}}\fi
-}
+%\preto\figure{%
+%  \ifnum\value{figure}=0\addtocontents{lof}{{\bfseries Chapter \thechapter\vskip10pt}}\fi
+%}
 
 \renewcommand{\cftchapfont}{\normalsize \scshape}
+
 
 
 \RequirePackage{pdfsync} %do pdf synchronization [andy]
@@ -243,3 +243,30 @@
 \providecommand\newthought[1]{%
    \addvspace{1.0\baselineskip plus 0.5ex minus 0.2ex}%
    \noindent\textsc{#1}}
+
+   
+%This adds chapter names to list of figures
+\usepackage{etoolbox}
+\makeatletter
+\newcommand{\thechaptername}{}
+\newcounter{chapter@last}
+\renewcommand{\chaptermark}[1]
+             {%
+               \markboth{#1}{}%
+               \renewcommand{\thechaptername}{#1}%
+             }
+\pretocmd{\caption}
+         {%
+           \ifnumequal%
+               {\value{chapter}}%
+               {\value{chapter@last}}%
+               {}%  already added
+               {%
+                 \addtocontents{lof}%
+                               {\protect\numberline{\bfseries\thechapter\quad\thechaptername}}%
+                 \setcounter{chapter@last}{\value{chapter}}%
+               }%
+         }
+         {}
+         {}%  failed, could put some error message here...
+\makeatother
