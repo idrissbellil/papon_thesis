@@ -323,15 +323,16 @@ We compare segments found using \gls{lccp} against ground truth using three stan
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
  \begin{table*}[!ht]
+   \small
    \centering
     \begin{tabular}{c||c||c||cc||cc||c||c}
     \multirow{2}{*}{Method} & Learned & WOv     & \multicolumn{2}{c||}{$fp$} & \multicolumn{2}{c||}{$fn$} & $F_{os}$ & $F_{us}$ \\ \cline{3-9}
     ~                       & Features & Mean   & Mean  & SD     & Mean  & SD    & Mean   & Mean   \\ \hline\hline
     LCCP            &  NO LEARNING & 88.7\% &  4.8\% & 2.6\%  & 8.3\% & 8.7\% & 7.4\%  & 4.7\%  \\ \hline
-    Richtsfeld \textit{et al.}~\cite{Richtsfeld:IROS12}  & RGB-D + Texture + Geometry & -      & -          & -      & -     & -     & 4.5\%  & 7.9\%  \\ \hline
-    {\"U}ckermann \textit{et al.}~\cite{Ritter2012} & NO LEARNING & -      & 1.9\% & 3.3\%  & 7.8\% & 7.3\% & -      & -      \\ \hline
+    Richtsfeld~\cite{Richtsfeld:IROS12}  & RGB-D,Texture,Geometry & -      & -          & -      & -     & -     & 4.5\%  & 7.9\%  \\ \hline
+    {\"U}ckermann~\cite{Ritter2012} & NO LEARNING & -      & 1.9\% & 3.3\%  & 7.8\% & 7.3\% & -      & -      \\ \hline
     \end{tabular}
-    \caption{Comparison of different segmentation methods on the OSD dataset using weighted overlap \textit{WOv} (the higher, the better), false positives \textit{$f_p$}, false negatives \textit{$f_n$}, as well as over- and under-segmentation \textit{$F_{os}$} and \textit{$F_{us}$} (the lower, the better). LCCP results were produced with voxel resolution $R_{voxel} = 0.005$, seed resolution $R_{seed} = 0.02$ and concavity tolerance angle $\beta_\text{Tresh}=10^\circ$.}
+    \caption[Segmentation Results on OSD Dataset]{Comparison of different segmentation methods on the OSD dataset using weighted overlap \textit{WOv} (the higher, the better), false positives \textit{$f_p$}, false negatives \textit{$f_n$}, as well as over- and under-segmentation \textit{$F_{os}$} and \textit{$F_{us}$} (the lower, the better). LCCP results were produced with voxel resolution $R_{voxel} = 0.005$, seed resolution $R_{seed} = 0.02$ and concavity tolerance angle $\beta_\text{Tresh}=10^\circ$.}
     \label{tab:res_stat}
 \end{table*}
 
@@ -360,7 +361,9 @@ Example scenes in Fig.~\ref{fig:nyu_examples} show that the \gls{lccp} also work
 
 \section{Discussion}
 
-In this Chapter we have presented several new concepts- the octree adjacency graph, supervoxels, a segmentation method which uses supervoxels, as well as a way to sequentially update an octree with new frames of data. Additionally, we have presented quantitative and qualitative results which demonstrate the usefulness of these techniques. In particular, \gls{lccp} has demonstrated the usefulness of a patch-based adjacency-graph interpretation of 3D Point Cloud data. We believe the results we achieved stem from two core properties: the ability of supervoxels to efficiently encode local regions, and the usefulness of a 3D adjacency-graph in resolving situations which are ambiguous in a 2D representation.
+In this Chapter we have presented several new concepts- the octree adjacency graph, supervoxels, a segmentation method which uses supervoxels, as well as a way to sequentially update an octree with new frames of data. Additionally, we have presented quantitative and qualitative results which demonstrate the usefulness of these techniques. In particular, \gls{lccp} has demonstrated the usefulness of a patch-based adjacency-graph interpretation of 3D Point Cloud data. The results we achieved stem from two core properties: the ability of supervoxels to efficiently encode local regions, and the usefulness of a 3D adjacency-graph in resolving situations which are ambiguous in a 2D representation.
+
+In the next Chapter, we will use the octree model we have developed here as observations for particle filter tracking. We will demonstrate its effectiveness as the basis for correspondence association, and show how its preservation of voxels through occlusions allows us to track objects in a real-world application. Additionally, we shall use the supervoxels we presented here as the basis for dividing tracked models into strata, and show how this can be used to vastly improve the run-time performance of a tracker. 
 
 %% Requires fltpage2 package
 %%

@@ -23,7 +23,7 @@
                 linkcolor=DarkBlue,
                 urlcolor=Crimson,
                 pdfdisplaydoctitle=true,
-                pdftitle={Extraction of Objects from Visual Streams}, pdfauthor={J\'{e}r\'{e}mie Papon}, pdfsubject={Dissertation},
+                pdftitle={Perceptual Parsing of Visual Streams through Hierarchical Tracking of Objects and their Parts}, pdfauthor={J\'{e}r\'{e}mie Papon}, pdfsubject={Dissertation},
                 pdfkeywords={Visual Tracking, Object Segmentation, Video Segmentation, Pointclouds}
                 ]{hyperref} 
 
@@ -37,16 +37,17 @@
 \RequirePackage[tight,nice]{units}
 \RequirePackage{verbatim}
 \RequirePackage[toc,page]{appendix}
+\RequirePackage[caption=false]{subfig}
 
 % colors
-\RequirePackage{color}
+\RequirePackage{xcolor}
 \definecolor{Crimson}{rgb}{0.6471, 0.1098, 0.1882}
 \definecolor{DarkBlue}{rgb}{0.1216, 0.1843, 0.2902}
 \definecolor{Silver}{rgb}{0.5490, 0.5451, 0.5882}
 
 
 \RequirePackage{url}
-\RequirePackage[titles]{tocloft}
+\RequirePackage[titles,subfigure]{tocloft}
 \setcounter{tocdepth}{3}
 \usepackage{etoolbox}
 \preto\section{%

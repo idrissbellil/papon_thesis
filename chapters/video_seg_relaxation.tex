@@ -175,7 +175,7 @@ We shall not evaluate the visual quality of segmentation results here for a coup
 In order to compare with the other methods, we needed to output a tracking rectangle for each frame. To do this, once the sequence was segmented, we found the segment which corresponded to the object to track in the first frame, and then took the bounding-box which contained it in each frame as the tracking rectangle. This bounding-box was then compared to ground-truth using two measures; Euclidean distance and the PASCAL-challenge based score proposed in \cite{PROST}. The latter compares the area of intersection of the ground truth and tracked box with the union of the same. When this is greater than 0.5, the object is considered successfully tracked. Table \ref{table:results} gives our results, as well as the results for the other methods.
  
  \begin{table}
-\caption{PROST dataset benchmark results. Top and bottom tables are average pixel error and PASCAL based scores, respectively}
+ \caption[PROST dataset benchmark results]{PROST dataset benchmark results. Top and bottom tables are average pixel error and PASCAL based scores, respectively}
 \begin{center}
 \begin{tabular}{|l|c|c|c|c|c|c|}
 \hline
@@ -197,6 +197,7 @@ Board & 75.0 & 67.9 & 67.9 & 10.0 & 71.4\\
 \end{center}
 
 \label{table:results}
+
 \end{table}
 
 
@@ -219,6 +220,8 @@ In addition to showing the strengths of our method, a weakness was also highligh
 \end{figure}
 
 \section{Discussion}
-In this chapter we presented a new method for performing on-line, dense, unsupervised video segmentation which uses tracking as the basis for segmentation. We have given results which show that the method is able to resolve occlusion relations between objects without explicitly modeling them, and can maintain consistent labels for objects, even when they leave and re-enter the field of view. Additionally, we have shown that the method is able to adapt to rapidly changing appearance of tracked objects, producing consistent segmentations over lengthy video sequences. A GPU version of the algorithm has been developed that can achieve near real-time levels ~10 fps at 640x480 resolution on an i7 standard desktop. One sequence we tested showed the vulnerability of the method to situations where objects have similar color distributions. A way to resolve this is to consider additional features such as object geometry in the measurement function. To measure such geometric features requires the addition of depth to our observations; we shall investigate adding this extra dimension in the following chapters. 
+In this chapter we presented a new method for performing on-line, dense, unsupervised video segmentation which uses tracking as the basis for segmentation. We have given results which show that the method is able to resolve occlusion relations between objects without explicitly modeling them, and can maintain consistent labels for objects, even when they leave and re-enter the field of view. Additionally, we have shown that the method is able to adapt to rapidly changing appearance of tracked objects, producing consistent segmentations over lengthy video sequences. A GPU version of the algorithm has been developed that can achieve near real-time levels ~10 fps at 640x480 resolution on an i7 standard desktop. 
+
+One sequence we tested showed the vulnerability of the method to situations where objects have similar color distributions. This showed the inherent flaw of standard video tracking and segmentation systems - they are unable to use 3D shape to resolve ambiguities. One must reason about real-world geometry in order to reliably track and segment objects. While it is theoretically possible to infer 3D geometry without depth information, the inference is going to be noisy and error-prone. As such, we decided to progress from standard video to RGB-D sensors which provide measured depth information to each pixel, allowing us to incorporate 3D shape into our measurement function. In subsequent Chapters we shall investigate how to take advantage of depth information while remaining efficient enough to work online. With this in mind, in the next Chapter we establish a graph-based framework for efficiently representing streaming unstructured point cloud data. 
 
 
