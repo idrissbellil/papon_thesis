@@ -38,6 +38,7 @@
 \RequirePackage{verbatim}
 \RequirePackage[toc,page]{appendix}
 \RequirePackage[caption=false]{subfig}
+\RequirePackage{epigraph}
 
 % colors
 \RequirePackage{xcolor}
