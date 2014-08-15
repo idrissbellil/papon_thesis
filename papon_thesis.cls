@@ -23,7 +23,7 @@
                 linkcolor=DarkBlue,
                 urlcolor=Crimson,
                 pdfdisplaydoctitle=true,
-                pdftitle={Perceptual Parsing of Visual Streams through Hierarchical Tracking of Objects and their Parts}, pdfauthor={J\'{e}r\'{e}mie Papon}, pdfsubject={Dissertation},
+                pdftitle={Perceptual Segmentation of Visual Streams by Tracking of Objects and Parts}, pdfauthor={J\'{e}r\'{e}mie Papon}, pdfsubject={Dissertation},
                 pdfkeywords={Visual Tracking, Object Segmentation, Video Segmentation, Pointclouds}
                 ]{hyperref} 
 
