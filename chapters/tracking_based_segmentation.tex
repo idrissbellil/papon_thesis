@@ -123,11 +123,11 @@ A fundamental task for intelligent autonomous robots is the problem of encoding 
 \begin{figure*}[ht!]
   \centering
   \includegraphics[width=\linewidth]{figures/IROS2013/SECKF.pdf}
-  \caption[Cranfield Key Frames]{A few example key frames extracted from the long Cranfield action. Numbered nodes represent interacting objects, while edges show touching relations between objects. Each keyframe represents a topological change in the scene - here we show 4 of the 35 keyframes.}
+  \caption[Cranfield Key Frames]{A few example key frames extracted from the long Cranfield action. Numbered nodes represent interacting objects, while edges show touching relations between objects. Each keyframe represents a topological change in the scene - here we show 4 of the 12 keyframes.}
   \label{fig:SECGraphs}
 \end{figure*}
 
-\section{Conclusions}
+\section{Discussion}
 In this Chapter we presented a method which extracts full scene segmentation from the model tracker we presented in the previous Chapter. The method uses a global energy functional to enforce smoothness and temporal continuity on the segmentations. Additionally, we feed segmentation results back into the tracked models, updating them so that they can deform and/or accumulate different view points. 
 
 There are many advantages to the method presented in this Chapter over the model tracker - it can track deforming objects, there is no need to know object models a-priori, tracked objects can be easily re-initialized using LCCP segmentation, there is no need to compute initial poses, and finally, we can extract action semantics without needing to know what objects are present. As this is a completely model free approach, it opens up many avenues of future research. In particular, of especial interest is that it allows bootstrapping of learning - we can attempt to build systems which learn to understand scenes purely from observation, without any human input or teaching.
