@@ -81,7 +81,7 @@
 \nobibliography*
 
 \RequirePackage{lettrine} % big letter at start of chapter
-\RequirePackage[margin=2.5cm, a4paper]{geometry}
+\RequirePackage[inner=40mm, outer=25mm, top=25mm, bottom=25mm, a4paper]{geometry}
 
 \RequirePackage{fancyhdr}
 \pagestyle{fancy} % options: empty , plain , fancy

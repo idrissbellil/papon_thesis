@@ -45,7 +45,16 @@ This leads us to the second challenge in image segmentation, which is that, gene
 
 
 \subsection{The Tracking Problem}
-\gls{mtvt} is a crucial challenge for many computer vision applications such as visual surveillance, action recognition, and robotic imitation learning. In many such functions, visual tracking serves as the precursor to all further high-level inference, as without it, one is unable to link observations (and the hidden states that generate them) over time. The general goal of \gls{mtvt} is to sequentially estimate the number of targets and their corresponding states (e.g., position, velocity). This is accomplished by associating noisy observations over time with the entities which produced them. Tracking links targets into sequential states (known as \emph{tracks}), typically using some a-priori detection model, such as tracking a human face in video based on a facial model. In general, this is done by estimating some state for each tracked object (e.g. a bounding box around a person's face) given an observation (e.g., the output of a face detector).
+Tracking entities over time is a critical element in a wide variety of computer vision applications such as visual surveillance, action recognition, and robotic imitation learning. In most of these, visual tracking serves as the precursor to further high-level inference, as without it, one is unable to correctly interpret time-variant systems. One can formalize the tracking problem as estimation of the time-varying hidden state (e.g., position, velocity) of an object $x(t)$ using noisy observations $y(t)$. For simplicity, one generally assumes the state evolution to be a \emph{Markov Process} (see Figure \ref{fig:HMM}), that is, a stochastic process which is conditionally independent of the rest of its history given its previous state.    
+
+\begin{figure}
+\label{fig:HMM}
+\centering
+\includegraphics[width=0.9\linewidth]{figures/Introduction/HMM.pdf}
+\caption[Hidden Markov Model]{The Hidden Markov Model is a classical way to represent the track of an object over time. The object states $x(0\dots t)$ (shown here in blue) are hidden variables which influence observations $y(0\dots t)$ through conditional dependencies (shown as arrows). An important property of the Markov Model is that state at time $t$ is dependent only on state at time $t-1$.}
+\end{figure}
+
+\gls{mtvt} extends these concepts to multiple targets, adding additional complexity due to the need to both estimate the number of tracked targets as well as associate observations with appropriate targets. This is the primary challenge of \gls{mtvt} - the data association problem - deciding which tracked target a particular observation belongs to. Confounding this is the additional null possibility, where an observation belongs to none of the tracked targets. Some additional difficulties present in \gls{mtvt} are related to those of image segmentation, simply extended into the temporal domain. In particular, interacting and occluded targets are especially challenging.
 
 \begin{figure}
 \label{fig:ExampleTracking}
@@ -54,10 +63,10 @@ This leads us to the second challenge in image segmentation, which is that, gene
 \caption[Example of Visual Tracking]{Example of Visual Tracking - from \cite{PartFilter_Papon_2012}. This shows outputs from various trackers in a standard video tracking benchmark \cite{PROST}. The output of each tracker is shown as a colored rectangle. Some of the difficulties of tracking can be seen- in particular complex backgrounds, motion blur, partial occlusions (second frame from left) and even full occlusions (right-most frame).}
 \end{figure}
 
-The primary challenge in \gls{mtvt} is the data association problem - deciding which tracked target a particular observation belongs to. Confounding this is the additional null possibility, where an observation belongs to none of the tracked targets. Closer examination reveals that the difficulties are related to those of image segmentation, simply extended into the temporal dimension. In particular, interacting and occluded targets are especially challenging.
-
 \subsection{Video Object Segmentation - Segmentation In Sequential Frames}
-\gls{vos} attempts to cluster pixels of video frames into segments which are both spatially and temporally coherent. While similar to \gls{mtvt}, \gls{vos} goes a step beyond localizing tracked objects, in that it makes an association decision for each observed pixel; in addition to estimating overall state, it must re-estimate spatial extent every frame. Additionally, \gls{vos} has the additional consideration that target appearance models are unknown a-priori, and are subject to arbitrary changes over time. 
+\gls{vos} attempts to cluster pixels of video frames into segments which are both spatially and temporally coherent. While related to \gls{mtvt}, \gls{vos} goes a step beyond localizing tracked objects, in that it makes an association decision for each observed pixel; in addition to estimating overall state, it must re-estimate spatial extent every frame. Additionally, \gls{vos} has the additional consideration that target appearance models are unknown a-priori, and are subject to arbitrary changes over time. 
+
+The standard interpretation of \gls{vos} is that of adding an additional dimension to image segmentation; that is, one stacks all the image frames on top of each other, and performs a ``volumetric'' segmentation. In this work we shall use a different interpretation for \gls{vos}; that of tracking multiple time-evolving and interacting objects projected onto the image plane of our sensor. While the standard interpretation has the advantage of allowing the straightforward extension of 2D segmentation techniques, it suffers greatly from its inability to handle occlusions in a meaningful way. This is easily observed when one considers that occlusions will result in ``disconnection'' within the 3D stack, violating the core assumption that segments of interest form contiguous volumes. In contrast, tracking techniques are able to handle occlusions gracefully.  
 
 \begin{figure}
 \label{fig:ExampleSegmentation}
