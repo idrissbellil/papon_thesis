@@ -13,23 +13,33 @@
 % the front matter
 \input{frontmatter/coverpage}
 \makegermantitle
+\cleardoublepage
 \maketitle
+\cleardoublepage
 \referentpage
 \include{copyright}
+
+\begingroup
+\let\cleardoublepagecopy\cleardoublepage
+\let\cleardoublepage\clearpage
 \abstractpage
 \tableofcontents
 \listoffigures
 \listoftables
-
+\printglossary[type=\acronymtype,title=List of Acronyms,toctitle=Terms and Abbreviations]
 \include{related_publications}
-\printglossaries
+\endgroup
+\let\cleardoublepage\cleardoublepagecopy
 %\dedicationpage
 \acknowledgments
+
 
 \onehalfspacing
 \mainmatter
 % include each chapter...
 \include{chapters/introduction}
+\cleardoublepage
+\cleardoublepage
 \include{chapters/video_seg_relaxation}
 \include{chapters/world_model}
 \include{chapters/model_based}

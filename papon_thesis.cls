@@ -29,7 +29,7 @@
 
 
 
-\RequirePackage[acronym]{glossaries}
+\RequirePackage[acronym,nonumberlist]{glossaries}
 \RequirePackage[centertags]{amsmath}
 \RequirePackage{amssymb}
 \RequirePackage[numbers, comma, sort&compress]{natbib}
@@ -137,15 +137,20 @@
   \vspace*{100pt} 
   \Huge \textcolor{DarkBlue}{\textit{\thetitle}} \vspace{10pt}
   \textcolor{Silver}{\rule{\textwidth}{2.0pt}}
-  \normalsize \sc a dissertation presented by\\
+  \normalsize \sc Dissertation \\ 
   \vspace{6pt}
-  \theauthor \\ 
+  in order to obtain the doctoral degree in Mathematics and Natural Sciences\\ 
+  "Doctor rerum naturalium" \\
   \vspace{6pt}
-  To The \@department\\
-  \vspace{8pt}
-  in partial fulfillment of the requirements\\
-  for the degree of\\ \@degree\\
-  in the subject of\\ \@field\\
+  of the Georg-August-Universit\"{a}t G\"{o}ttingen \\
+  \vspace{6pt}
+  in the Doctoral program of \\
+  the Georg-August University School of Science (GAUSS) \\
+  \vspace{24pt}
+  submitted by\\
+  \theauthor
+  \vspace{12pt} 
+  of Summit, NJ, USA \\
   \vspace{100pt}
   \includegraphics[width=30mm]{figures/UniLogo1} \\
   \vspace{12pt} 

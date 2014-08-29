@@ -6,17 +6,17 @@ The world is a construct of our sensations, perceptions, memories. It is conveni
 
 \chapter{Patch-based Perceptual World Model}
 \label{Chap:WorldModel}
-\lettrine[lines=3, loversize=0.3]{\textcolor{DarkBlue}T}{he widespread availability of cheap 3D sensors} has had a profound impact on the world of computer vision. Researchers have found that they no longer need to attempt to find heuristic tricks which can create an artificial three dimensional interpretation from a two dimensional image. The advent of the Kinect (and other, related inexpensive RGB-D sensors) has allowed direct progression to high-level concepts and rules which the human mind uses when first learning to understand the real world - a completely different approach than trying to mimic the behavior of the mind when it is adapting those rules (learned from a life-time of 3D stereo data) in order to interpret some new 2D image.
+\lettrine[lines=3, loversize=0.3]{\textcolor{DarkBlue}T}{he widespread availability} of cheap 3D sensors has had a profound impact on the world of computer vision. Where before researchers needed to find heuristic tricks or complex algorithms with which to infer an artificial three dimensional interpretation from a two dimensional image, the new sensors allow direct observation (albeit, noisily) of 3D data. This has allowed direct progression to high-level concepts and rules which the human mind uses when first learning to understand the real world. This is a completely different approach than trying to mimic the behavior of the mind when it is adapting those rules (learned from a life-time of 3D stereo data) in order to interpret some new 2D image. In other words, working within the 3D representation directly allows us to side-step the problem of needing to imitate the complex machinery\cite{pinker1978representation} the mind uses to construct an internal representation of the world. 
 
-In this chapter we shall present our work in creating a full 3D artificial world model which can be used for higher level semantic understanding of both single frames and video. The model we present begins with point clouds, relying on the general framework set up in the Point Cloud Library \footnote{\url{http://www.pointclouds.org/}} (which we have both made use-of and contributed-to extensively as part of this work). Point clouds are a useful way of representing the data obtained from RGB-D sensors. The pixel coordinates and depth value coming from the RGB-D pair can be transformed into an $(x,y,z)$ point, and the RGB information can be attached to this point.
+In this chapter we shall present our work in creating such a full 3D artificial world model which can be used for efficient higher level semantic understanding of both single frames and video. While we do not claim that the model proposed in this Chapter bears direct similarity to the one used internally in the visual cortex, we have found its use generally advantageous over the 2D projective representation. Indeed, we suggest that the concept of ``empty space'' which is encoded implicitly in our sparse voxel model is an extremely useful and important notion. Moreover, the model is able to succinctly and unambiguously express spatial relationships as a 2D model cannot.
 
 \section{Pre-processing of Point Cloud Data}
-Before continuing, we shall briefly introduce two pre-processing steps which are used throughout the rest of this work. The first downsamples the continuous point cloud space onto a discrete grid, while the second pre-computes an adjacency graph for this grid.
+Our model begins with point clouds, relying on the general framework set up in the Point Cloud Library \footnote{\url{http://www.pointclouds.org/}}, which we have both made use-of and contributed-to as part of this work. Point clouds are a useful way of representing the data obtained from RGB-D sensors, where pixel coordinates and depth value from the RGB-D pair are transformed into an $(x,y,z)$ point in continuous real-world space, with the RGB information for the pixel attached to this point. Before continuing, we shall briefly introduce two important pre-processing steps which are used throughout the rest of this work. The first downsamples the continuous point cloud space onto a discrete grid, while the second pre-computes an adjacency graph for this grid.
 
 \subsection{Voxelization}
 The resolution of a standard RGB-D camera such as the Kinect is 640x480 pixels, yielding about 300,000 points per frame. While for static image segmentation this might be an acceptable amount of data, for video segmentation it is simply too much data to process directly in reasonable run times (on standard hardware). Because of this, a common pre-processing step is to down-sample point clouds using a \textit{voxel-grid} filter, a process known as \textit{voxelization}. 
 
-\begin{figure}
+\begin{figure}[!t]
 \begin{center}
 \includegraphics[width=0.8\linewidth]{figures/WorldModel/stanford_bunny.png}
 \end{center}
@@ -25,7 +25,7 @@ The resolution of a standard RGB-D camera such as the Kinect is 640x480 pixels, 
 \end{figure}
 %------------------------------------------------------------------------
 
-\begin{figure}
+\begin{figure}[!t]
 \begin{center}
 \includegraphics[width=\linewidth]{figures/WorldModel/voxel_grid_octree.png}
 \end{center}
@@ -33,7 +33,7 @@ The resolution of a standard RGB-D camera such as the Kinect is 640x480 pixels, 
 \label{fig:stanford_bunny}
 \end{figure}
 
-\begin{figure}
+\begin{figure}[!t]
 \begin{center}
 \includegraphics[width=0.9\linewidth]{figures/WorldModel/3d_nearest_neigh.png}
 \end{center}
@@ -112,7 +112,7 @@ where $\lambda,\mu,$ and $\epsilon$ control the influence of color, spatial dist
 Assigning voxels to supervoxels is done iteratively, using a local k-means clustering related to \cite{SLICCompared,DASP}, with the significant difference that we consider connectivity and flow when assigning pixels to a cluster. The general process is as follows: beginning at the voxel nearest the cluster center, we flow outward to adjacent voxels and compute the distance from each of these to the supervoxel center using Equation \ref{eqn:Distance}. If the distance is the smallest this voxel has seen, its label is set, and using the adjacency graph, we add its neighbors which are further from the center to our search queue for this label. We then proceed to the next supervoxel, so that each level outwards from the center is considered at the same time for all supervoxels. We proceed iteratively outwards until we have reached the edge of the search volume for each supervoxel (or have no more neighbors to check).
 
 %------------------------------------------------------------------------
-\begin{figure}
+\begin{figure}[!t]
 \begin{center}
    \includegraphics[width=0.95\linewidth]{figures/CVPR2013/SearchOrder.pdf}
 \end{center}
@@ -130,7 +130,7 @@ This amounts to a breadth-first search of the adjacency graph, where we check th
 Once the search of all supervoxel adjacency graphs has concluded, we update the centers of each supervoxel cluster by taking the mean of all its constituents. This is done iteratively; either until the cluster centers stabilize, or for a fixed number of iterations. For this work we found that the supervoxels were stable within a few iterations, and so have simply used five iterations for all presented results. 
 
 \section{Sequential Update of Perceptual Model}
-As an additional consideration, we have developed a scheme for adding new point clouds sequentially (as from a video stream) into an existing supervoxel octree. This is accomplished through a process which classifies voxels in the tree based on their behavior. As a first step, we insert points from the new point cloud into the octree, and initialize new leaves for voxels which did not exist previously. This results in an octree where leaves fall into three possible categories (illustrated in Fig.~\ref{fig:VoxelVisibility}; they are either new, observed, or unobserved in the most recent observation. Handling of new leaves is straightforward; we simply calculate adjacency relations to existing leaves and flag them as unlabeled. 
+As an additional consideration, we have developed a scheme for adding new point clouds sequentially (as from a video stream) into an existing supervoxel octree. This is accomplished through a process which classifies voxels in the tree based on their behavior. As a first step, we insert points from the new point cloud into the octree, and initialize new leaves for voxels which did not exist previously. This results in an octree where leaves fall into three possible categories (illustrated in Figure~\ref{fig:VoxelVisibility}; they are either new, observed, or unobserved in the most recent observation. Handling of new leaves is straightforward; we simply calculate adjacency relations to existing leaves and flag them as unlabeled. 
 \begin{figure}
   \centering
   \includegraphics[scale=1.5]{figures/IROS2013/VoxelVisibility.pdf}
@@ -140,7 +140,15 @@ As an additional consideration, we have developed a scheme for adding new point 
 
 To determine whether a leaf which existed previously has changed, we test the distance between the centroid of the points falling within its voxel (from the new frame) and its previous centroid. This is done in the same feature space used for growing the supervoxels, that is, we test whether the normal, color, and spatial location have varied more than a threshold value. This threshold is set to a relatively low constant value so that it favors false-positives (finding change when there was none), as they do not impact the tracking performance of the algorithm, but only have a slight effect on its run-time.  If a leaf is found to have changed, we remove its previous labeling. We also perform a global check to see if more than half of a supervoxels support has changed; if so, we completely remove the supervoxels label from all of its constituent voxels. 
 
-Finally, we must consider how to handle leaves which were not observed in the inserted point cloud. Rather than simply prune them, we first check if it was possible to observe them from the viewpoint of the sensor which generated the input cloud. This occlusion check can be accomplished efficiently using the octree by determining if any voxels exist between unobserved leaves and the sensor viewpoint. If a clear line of sight exists from the leaf to the camera, it can safely be deleted. Conversely, if the path is obstructed, we "freeze" the leaf, meaning that it will remain constant until it is either observed or passes the line of sight test in a future frame (in which case, it can be safely deleted). This occlusion testing means that tracking of occluded objects is trivial, as occluded voxels remain in the observations which are used for tracking.
+Finally, we must consider how to handle leaves which were not observed in the inserted point cloud. Rather than simply prune them, we first check if it was possible to observe them from the viewpoint of the sensor which generated the input cloud. This occlusion check can be accomplished efficiently using the octree by determining if any voxels exist between unobserved leaves and the sensor viewpoint. If a clear line of sight exists from the leaf to the camera, it can safely be deleted. Conversely, if the path is obstructed, we "freeze" the leaf, meaning that it will remain constant until it is either observed or passes the line of sight test in a future frame (in which case, it can be safely deleted). This occlusion testing means that tracking of occluded objects is trivial, as occluded voxels remain in the observations which are used for tracking. This procedure results in what we term ``voxel-permanence'', as it results in voxels persisting through occlusions as seen in Figure \ref{fig:SequentialResults}. 
+
+%------------------------------------------------------------------------
+\begin{figure}[!t]
+\includegraphics[width=\linewidth]{figures/WorldModel/sequential.pdf}
+   \caption[Voxel Permanence]{Example of successful tracking of an object through complete occlusion using the sequentially updated world model and the concept of voxel permanence. Row A shows the original image frames - the bolt becomes occluded by the faceplate and cannot be seen by the sensor. Row B shows tracking failure using the raw 3D data - black ``holes'' behind the arm and faceplate are due to occlusion. Row C shows our model and tracked output - ``holes'' are now mostly filled in allowing tracking to succeed.}
+\label{fig:SequentialResults}
+\end{figure}
+%------------------------------------------------------------------------
 
 Once the octree voxels have been updated, we then proceed to update the supervoxels as before. That is, first we generate new seeds in regions of large unlabeled voxels, and then conduct the iterative region growing. This results in new supervoxels in regions which are new or changing, while leaving supervoxels in static and occluded regions unchanged. This reduces the tracking and segmentation problem to finding the best joint association of these new supervoxels with those from the prior time-step.
 
@@ -159,7 +167,7 @@ The division of the $x$ and $y$ coordinates by $z$ reverses the perspective tran
 \end{align}
 Because the derivatives are equal, the local coordinate frame is stretched equally along all axes by the transformations. The important thing about this property is, that small cubic voxels are still cubic after the transformation. This leaves the geometry of space basically untouched in the foreground (if the voxel size is chosen sufficiently small), while distant voxels are strongly transformed to fill the ``empty'' space, compensating for reduced point density.
 
-Rather than transforming the clouds back and forth, we instead transform the bins of the octree itself, creating an octree where bin volume (and thus, voxel size) effectively increases with distance from the camera viewpoint. Doing this directly within the octree allows us to determine adjacency as before (neighboring bins), even though distance between neighboring voxels increases with distance from the camera. Fig.~\ref{fig:quantization_transform} illustrates the advantageous effect of this transformation on segmentation.
+Rather than transforming the clouds back and forth, we instead transform the bins of the octree itself, creating an octree where bin volume (and thus, voxel size) effectively increases with distance from the camera viewpoint. Doing this directly within the octree allows us to determine adjacency as before (neighboring bins), even though distance between neighboring voxels increases with distance from the camera. Figure~\ref{fig:quantization_transform} illustrates the advantageous effect of this transformation on segmentation.
 
 \begin{figure}
   \centering
@@ -179,7 +187,7 @@ As an example of an application of supervoxels and the adjacency octree, we shal
   \label{fig:flow}
 \end{figure}
 
-The angle of the normals to the vector $\vec d = \vec x_1-\vec x_2$ joining the centroids can be calculated using the identity for the dot product $\vec a\cdot \vec b = |\vec a|\cdot |\vec b|\cdot \cos(\alpha)$ with $\alpha = \measuredangle(\vec a,\vec b)$. For \textit{convex} connections, $\alpha_1$ is smaller than $\alpha_2$ (see Fig.~\ref{fig:details}~A). This can be expressed as:
+The angle of the normals to the vector $\vec d = \vec x_1-\vec x_2$ joining the centroids can be calculated using the identity for the dot product $\vec a\cdot \vec b = |\vec a|\cdot |\vec b|\cdot \cos(\alpha)$ with $\alpha = \measuredangle(\vec a,\vec b)$. For \textit{convex} connections, $\alpha_1$ is smaller than $\alpha_2$ (see Figure~\ref{fig:details}~A). This can be expressed as:
   \begin{equation*}
     \alpha_1 < \alpha_2 \Rightarrow \cos(\alpha_1) - \cos(\alpha_2) > 0 \Leftrightarrow \vec {n_1}\cdot \hat d - \vec {n_2}\cdot \hat d > 0,
   \end{equation*}
@@ -335,7 +343,7 @@ We compare segments found using \gls{lccp} against ground truth using three stan
     \label{tab:res_stat}
 \end{table*}
 
-The qualitative examples from the OSD dataset (Fig.~\ref{fig:OSD_results}) show that \gls{lccp} performs very well in the segmentation of cluttered scenes. The object separation can be intuitively understood: all objects present in the scenes are separated by concave boundaries, i.e. a line connecting neighboring surfaces of two different objects always travels through ``air''. This is also true for the boundary between an object and the supporting surface. As a consequence, objects that have a convex shape are correctly captured as one segment and separated from the other objects. Hollow objects (bowls, cups etc.) can be observed to show multiple segments inside, because the orientation of surface normals changes strongly on these concave surfaces. The quantitative results (Table~\ref{tab:res_stat}) demonstrate that the approach is able to compete with state-of-the-art methods in the task of segmenting cluttered scenes with 'single-part' objects. 
+The qualitative examples from the OSD dataset (Figure~\ref{fig:OSD_results}) show that \gls{lccp} performs very well in the segmentation of cluttered scenes. The object separation can be intuitively understood: all objects present in the scenes are separated by concave boundaries, i.e. a line connecting neighboring surfaces of two different objects always travels through ``air''. This is also true for the boundary between an object and the supporting surface. As a consequence, objects that have a convex shape are correctly captured as one segment and separated from the other objects. Hollow objects (bowls, cups etc.) can be observed to show multiple segments inside, because the orientation of surface normals changes strongly on these concave surfaces. The quantitative results (Table~\ref{tab:res_stat}) demonstrate that the approach is able to compete with state-of-the-art methods in the task of segmenting cluttered scenes with 'single-part' objects. 
 
 \begin{table*}
   \centering
@@ -356,18 +364,10 @@ The qualitative examples from the OSD dataset (Fig.~\ref{fig:OSD_results}) show 
   \label{tab:res_lccp_nyu}
 \end{table*}
 
-Example scenes in Fig.~\ref{fig:nyu_examples} show that the \gls{lccp} also works well on the real-world scenes from the NYU dataset. The quantitative results (Table~\ref{tab:res_lccp_nyu})\footnote{Updated results for \cite{Silberman:ECCV12} are available at \url{http://cs.nyu.edu/~silberman/datasets/nyu_depth_v2.html}.} show that our algorithm is able to produce good results on the challenging dataset. Despite being much simpler and without requiring learning on human annotated ground-truth, we compete with the approach from \cite{Silberman:ECCV12} when only depth information is used. Additionally, we still achieve 93\% of their score when comparing against the more complex feature spaces used in conjunction with learning-based algorithms. We should emphasize that our competitors do not aim for object parts but rather for ``whole object'' detections, specifically, those whole objects learned from this particular annotated ground truth. Conversely, our method establishes a general rule for object-ness that does not depend on this particular dataset, nor on the whims of a particular human annotator.
+Example scenes in Figure~\ref{fig:nyu_examples} show that the \gls{lccp} also works well on the real-world scenes from the NYU dataset. The quantitative results (Table~\ref{tab:res_lccp_nyu})\footnote{Updated results for \cite{Silberman:ECCV12} are available at \url{http://cs.nyu.edu/~silberman/datasets/nyu_depth_v2.html}.} show that our algorithm is able to produce good results on the challenging dataset. Despite being much simpler and without requiring learning on human annotated ground-truth, we compete with the approach from \cite{Silberman:ECCV12} when only depth information is used. Additionally, we still achieve 93\% of their score when comparing against the more complex feature spaces used in conjunction with learning-based algorithms. We should emphasize that our competitors do not aim for object parts but rather for ``whole object'' detections, specifically, those whole objects learned from this particular annotated ground truth. Conversely, our method establishes a general rule for object-ness that does not depend on this particular dataset, nor on the whims of a particular human annotator.
 
 \section{Discussion}
 
-In this Chapter we have presented several new concepts- the octree adjacency graph, supervoxels, a segmentation method which uses supervoxels, as well as a way to sequentially update an octree with new frames of data. Additionally, we have presented quantitative and qualitative results which demonstrate the usefulness of these techniques. In particular, \gls{lccp} has demonstrated the usefulness of a patch-based adjacency-graph interpretation of 3D Point Cloud data. The results we achieved stem from two core properties: the ability of supervoxels to efficiently encode local regions, and the usefulness of a 3D adjacency-graph in resolving situations which are ambiguous in a 2D representation.
+In this Chapter we have presented several new concepts- the octree adjacency graph, supervoxels, a segmentation method which uses supervoxels, as well as a way to sequentially update an octree with new frames of data. Additionally, we have presented quantitative and qualitative results which demonstrate the usefulness of these techniques on real-world datasets. In particular, \gls{lccp} has demonstrated the usefulness of a patch-based adjacency-graph interpretation of 3D Point Cloud data. The results we achieved stem from two core properties: the ability of supervoxels to efficiently encode local regions, and the usefulness of a 3D adjacency-graph in resolving situations which are ambiguous in a 2D representation. Additionally, the depth-dependent octree world model is able to compactly represent 3D data with included adjacency information that gracefully adjusts level-of-detail as distance increases from the sensor. Finally, the sequential update process we described allows a basic ``object permanence'' to be directly encoded without the need for higher-level objects. While this does have the advantage of giving ``voxel-permanency'', it does suffer from an inability to deal with the case of ``moving-while-occluded'', a situation which cannot be resolved at the low-level used here. 
 
 In the next Chapter, we will use the octree model we have developed here as observations for particle filter tracking. We will demonstrate its effectiveness as the basis for correspondence association, and show how its preservation of voxels through occlusions allows us to track objects in a real-world application. Additionally, we shall use the supervoxels we presented here as the basis for dividing tracked models into strata, and show how this can be used to vastly improve the run-time performance of a tracker. 
-
-%% Requires fltpage2 package
-%%
-% \begin{FPfigure}
-% \includegraphics[width=\textwidth]{figures/fullpage}
-% \caption[Short figure name.]{This is a full page figure using the FPfigure command. It takes up the whole page and the caption appears on the preceding page. Its useful for large figures. Harvard's rules about full page figures are tricky, but you don't have to worry about it because we took care of it for you. For example, the full figure is supposed to have a title in the same style as the caption but without the actual caption. The caption is supposed to appear alone on the preceding page with no other text. You do't have to worry about any of that. We have modified the fltpage package to make it work. This is a lengthy caption and it clearly would not fit on the same page as the figure. Note that you should only use the FPfigure command in instances where the figure really is too large. If the figure is small enough to fit by the caption than it does not produce the desired effect. Good luck with your thesis. I have to keep writing this to make the caption really long. LaTex is a lot of fun. You will enjoy working with it. Good luck on your post doctoral life! I am looking forward to mine. \label{fig:myFullPageFigure}}
-% \end{FPfigure}
-% \afterpage{\clearpage}

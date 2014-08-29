@@ -140,6 +140,12 @@ The proposed sampling scheme is as follows. We select a spatial sampling resolut
 For each particle, we randomly select a point from each stratum using uniform sampling, and then transform and score it as described in the previous Section. As an additional step, we also select $\frac{N_s}{4}$ points uniformly from the entire model. Using strata reduces the noise which occurs when sampling from the whole model exclusively, while sampling randomly from the entire distribution improves occlusion performance. 
 
 While sampling will tend to produce noisier tracking results for low $N_s$, it also greatly reduces the computational complexity, as we only need to transform and test a small subset of the model points. This allows one to greatly increase the number of particles for a given frame-rate. Importantly, each particle is testing a separate random subset of model points. This results in the product of $N_s$, the number of sample points per particle, and $N$, the number of particles, reaching a critical level where coverage becomes sufficient that error is equivalent to sampling all points. In the results presented below, we shall demonstrate that this critical level can be used to significantly decrease run time for a given level of error. That is, we shall show that the number of points that must be tested overall, for a given level of error, is lower when stratified sampling is used. This means that we can significantly increase accuracy for a given frame-rate, reducing run-time complexity to the point that we can track 6 DoF pose for multiple objects in real-time.   
+\begin{figure}[!t]
+  \centering
+  \includegraphics[width=\linewidth]{figures/Tracking/KinectBoxSVMontage.pdf}
+  \caption[Tracking on the artificial ``Kinect Box'' sequence.]{Tracking on the artificial ``Kinect Box'' sequence. The top row shows tracked output overlaid on input data, while the bottom row shows the supervoxel strata that are used for sampling.}
+  \label{fig:KinectBoxMontage}
+\end{figure}
 
 \section{Experimental Results}
 \label{sec:ExperimentalResults}
@@ -148,14 +154,13 @@ In this Section we first present results on a set of synthetic videos to quantif
 \subsection{Results on Synthetic Sequences}
 In our first experiment, we demonstrate the effectiveness of our stratified sampling strategy using four synthetic tracking videos from \cite{Choi_IROS2013}. These RGB-D sequences are set in a virtual kitchen (see Figure \ref{fig:KinectBoxMontage}) and each contain a single item to track as the camera moves. Ground truth trajectories of the cameras are given in Figures \ref{fig:PlotsKinectBox}-\ref{fig:PlotsTide}; one can observe that the trajectories are complex, consisting of large variations in position, orientation, and velocity.  
 
-\begin{figure*}[!ht]
+\begin{figure}[!t]
   \centering
-  \includegraphics[width=\linewidth]{figures/Tracking/KinectBoxSVMontage.pdf}
-  \caption[Tracking on the artificial ``Kinect Box'' sequence.]{Tracking on the artificial ``Kinect Box'' sequence. The top row shows tracked output overlaid on input data, while the bottom row shows the supervoxel strata that are used for sampling.}
-  \label{fig:KinectBoxMontage}
-\end{figure*}
+  \includegraphics[width=1.06\linewidth]{figures/Tracking/TideMontage.pdf}
+  \caption[Tracking on the artificial ``Tide'' sequence.]{Tracking on the artificial ``Tide'' sequence. The left column shows tracked output overlaid on input data, while the right column shows the supervoxel strata that are used for sampling.}
+  \label{fig:TideMontage}
+\end{figure}
 
-\missingfigure{Should I add montage of other 3 sequences?}
 
 To evaluate our approach, we compute root mean square (RMS) error in both translation and orientation, averaged over 25 test runs for each sequence. Computation times are measured in ms per frame, and are also averaged across all frames of the 25 test runs. In order to compare with \cite{Choi_IROS2013}, we have combined their RMS error results for each dimension (x, y, z, roll, pitch, yaw) into two measurements - displacement and rotation. Rotation is calculated using the unit quaternion distance metric \cite{Kuffner_ICRA2004}, which is equivalent to the angular distance on the unit sphere. This combination reduces the amount of data to compare without loss, as the choice of orientation of the dimensions is arbitrary and without import. Example displacement and rotation ground truths for the ``Kinect Box'' sequence can be found in Figure \ref{fig:Plots}.
 
@@ -184,7 +189,7 @@ We should also note that the minimum error asymptote observed is likely a conseq
 \begin{figure*}[!ht]
   \centering 
   \vspace{-10pt}
-  \subfloat{{\includegraphics[width=0.98\linewidth]{figures/Tracking/ErrorComps/DispErrorKinectBox.pdf} }} \\
+  \subfloat{{\includegraphics[width=1.0\linewidth]{figures/Tracking/ErrorComps/DispErrorKinectBox.pdf} }} \\
   \vspace{-10pt}
   \subfloat{{\includegraphics[width=1.0\linewidth]{figures/Tracking/ErrorComps/AngularErrorKinectBox.pdf} }}   \vspace{-7pt} \\
   \caption[Results on the Kinect Box artificial sequence.]{Results on the Kinect Box artificial sequence. Each colored curve represents a certain number of samples, and gives mean RMS error averaged over 25 trial runs for increasing numbers of particles.}%
@@ -263,7 +268,7 @@ One application of our tracker is to provide semantic understanding and imitatio
 
 As a demonstration of this, we shall once again use the well established ``Cranfield'' benchmark set \cite{Collins1985}, consisting of eight pieces which can be assembled in a number of different orders. In our experiments, models consist of voxelized point clouds derived from high-resolution models of the pieces, and initial poses for tracking are found using a combined object recognition and pose estimation algorithm \cite{Buch_CVPR2014}. Each object is tracked using an independent particle filter, with $N_{samples}$ set to 50, and $N_{particles}$ set to 1000. 
 
-Recordings were made on the MARVIN platform at the University of Southern Denmark, and use 2 Kinect RGB-D cameras \footnote{It is well-known that multiple Kinect sensors sharing a common field of view will cause IR interference, resulting in poor depth reconstructions. A known solution, which the platform incorporates, is the use of vibrating motors mounted on the Kinect sensors \cite{Butler2012}. This method has been shown to effectively blur out the noisy contributions of external sensors, while maintaining a high depth reconstruction quality.}. The recordings were performed by different people, where the people were following assembly instructions presented by the planning system of the IntellAct project. A description of the planner is beyond the scope of this work (we refer the reader to \cite{TODOPLANNER}), but for our purposes we just need to know that the order of assembly varies from sequence to sequence. 
+Recordings were made on the MARVIN platform at the University of Southern Denmark, and use 2 Kinect RGB-D cameras \footnote{It is well-known that multiple Kinect sensors sharing a common field of view will cause IR interference, resulting in poor depth reconstructions. A known solution, which the platform incorporates, is the use of vibrating motors mounted on the Kinect sensors \cite{Butler2012}. This method has been shown to effectively blur out the noisy contributions of external sensors, while maintaining a high depth reconstruction quality.}. The recordings were performed by different people, where the people were following assembly instructions presented by the planning system of the IntellAct project. A description of the planner is beyond the scope of this work (we refer the reader to \cite{Rossman_ICRA2014}), but for our purposes we just need to know that the order of assembly varies from sequence to sequence. 
 
 Figure \ref{fig:Tracking_Montage} shows a montage of screenshots captured as a human demonstrates assembly of the benchmark. As can be seen, all pieces are successfully tracked from start to finish, with each tracker outputting smooth trajectories that can be used for training a robot using Dynamic Motion Primitives (DMP) \cite{Kulvicius2012}. In Figure \ref{fig:TrackingResults} we show tracks from multiple different human demonstrations - one can observe the different strategies that people employ in assembling the benchmark. The tracks in the lower right corner of the Figure are from a robot reproducing the assembly after being trained on the human demonstrations \cite{Rossman_ICRA2014}. 
 
@@ -275,7 +280,9 @@ Figure \ref{fig:Tracking_Montage} shows a montage of screenshots captured as a h
 \end{figure*}
 
 \section{Discussion}
-In this Chapter we have presented a novel spatially stratified sampling approach which greatly reduces the computational complexity of 3D Point Cloud correspondence particle filters. We evaluated the tracker using synthetic sequences for which precise ground truth exists, as well as real sequences of a human demonstration application. To demonstrate the effect of stratified sampling on performance, we conducted a sweep over the parameter space of number of particles and samples. This sweep showed the clear effectiveness of the proposed method in matching and even out-performing a GPU implementation on the CPU. 
+In this Chapter we have presented a novel spatially stratified sampling approach which greatly reduces the computational complexity of 3D Point Cloud correspondence particle filters. We evaluated the tracker using synthetic sequences for which precise ground truth exists, as well as real sequences of a human demonstration application. To demonstrate the effect of stratified sampling on performance, we conducted a sweep over the parameter space of number of particles and samples. This sweep showed the clear effectiveness of the proposed method in matching and even out-performing a GPU implementation. 
 
-We have now established our ability to track multiple objects in real-time within point cloud data. In the next Chapter, we will combine this tracker with the supervoxels presented previously to generate a full segmentation of point cloud video that is robust to occlusion and maintains object identities throughout extended sequences. To do this, we shall borrow some ideas from our 2D tracker presented in Chapter~\ref{Chap:VideoSegRelaxation}, and introduce a new global energy function that allows us to assign newly observed supervoxels to tracked targets.
+The approach we have presented here allows us to effectively track rigid objects in 3D voxel space. While it is very efficient at doing this tracking, it remains just that, a tracker, the result of which is an object state. Moreover, it is unable to handle deforming objects, and as of yet we have not shown how to handle objects entering or leaving the scene. That is to say, we have yet to show how we can use this tracking system to produce a full video segmentation.
+
+As such, now that we have now established our ability to track multiple objects in real-time within point cloud data, we can proceed to \gls{vos}. In the next Chapter, we will combine the 3D correspondence-based tracker with the supervoxel world-model presented previously to generate a full segmentation of point cloud video that is robust to occlusion and maintains object identities throughout extended sequences. To do this, we shall borrow some ideas from our 2D tracker presented in Chapter~\ref{Chap:VideoSegRelaxation}, and introduce a new global energy function that allows us to assign newly observed supervoxels to tracked targets.
 
