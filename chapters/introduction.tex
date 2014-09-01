@@ -18,29 +18,27 @@ As with humans, in order for intelligent agents to be truly autonomous, they mus
 In this work, we propose to develop an unconstrained video segmentation algorithm that is able to track low level patches. This permits the segmentation of objects and their parts naturally, without the need to define what an object actually is. Rather than train classifiers to recognize pre-defined objects, we can have an agent observe or interact with a scene and learn the concept of an object through movement and interactions between observed patches. This Chapter introduces the general concepts that will be expounded upon throughout the work by first discussing the three underlying tasks; Image Segmentation, \acrfull{mtt}, and \acrfull{vos}. With each of these tasks, we will discuss what exactly our goals are, and what challenges are faced in achieving them. Next, we survey the state of the art in each of these fields, highlighting the methods and important papers upon which we base this work. Finally, we outline each of the Chapters of this work, and enumerate the specific contributions of our research.
 
 \subsection{The Image Segmentation Problem}
-Image segmentation aims to divide the set of pixels in an image into a number of distinct subsets, where each subset represents some semantically meaningful entity (e.g., an object - see Figure \ref{fig:segmentation_example}). This is a (infamously) deceptively tricky business, primarily because it is something that humans are able to do intuitively. This ease with which humans can segment visual scenes is highly deceptive; Marvin Minsky, one of the pioneers of \gls{ai}, famously assigned one of his students ``computer vision'' as a summer undergraduate project in 1966. Nearly half a century later, despite the extensive effort to solve it, image segmentation, the first step on the long road to complete ``computer vision'', remains an unsolved problem.  In fact, this phenomenon - of tasks that are simple for humans being incredibly demanding computationally - even has its own name; \emph{Moravec's Paradox}. As stated by Pinker \cite{Pinker_Language}:
+Image segmentation aims to divide the set of pixels in an image into a number of distinct subsets, where each subset represents some semantically meaningful entity (e.g., an object - see Figure \ref{ExampleSeg}). This is a (infamously) deceptively tricky business, primarily because it is something that humans are able to do intuitively. This ease with which humans can segment visual scenes is highly deceptive; Marvin Minsky, one of the pioneers of \gls{ai}, famously assigned one of his students ``computer vision'' as a summer undergraduate project in 1966. Nearly half a century later, despite the extensive effort to solve it, image segmentation, the first step on the long road to complete ``computer vision'', remains an unsolved problem.  In fact, this phenomenon - of tasks that are simple for humans being incredibly demanding computationally - even has its own name; \emph{Moravec's Paradox}. As stated by Pinker \cite{Pinker_Language}:
+
+\begin{figure}[!t]
+\includegraphics[width=\linewidth]{figures/Introduction/segmentation_GT_example.png}
+\caption[Example of Segmentation and Ground Truth]{Example of Segmentation and one interpretation of Ground Truth. From left to right we have an image, a segmentation from a computer vision algorithm, and a human-annotated ground truth labeling. Here labels are represented by different colors, a convention we shall use throughout the rest of this work.}
+\label{ExampleSeg}
+\end{figure}
 
 \begin{quote}
 ``The main lesson of thirty-five years of AI research is that the hard problems are easy and the easy problems are hard. The mental abilities of a four-year-old that we take for granted – recognizing a face, lifting a pencil, walking across a room, answering a question – in fact solve some of the hardest engineering problems ever conceived. (p. 190)''
 \end{quote}
-
-
-\begin{figure}
-\label{fig:SegmentationExample}
-\centering
-\includegraphics[width=\linewidth]{figures/Introduction/segmentation_GT_example.png}
-\caption[Example of Segmentation and Ground Truth]{Example of Segmentation and one interpretation of Ground Truth. From left to right we have an image, a segmentation from a computer vision algorithm, and a human-annotated ground truth labeling. Here labels are represented by different colors, a convention we shall use throughout the rest of this work.}
-\end{figure}
 
 The reason for this ``hardness'' of an ``easy'' problem like image segmentation is two-fold: firstly, there are many technical and computationally-demanding challenges associated with properly dividing an image into separate objects. Among these, shadows, occlusions, reflections, imaging noise and so forth can all greatly affect the results of image segmentation. Consider, for instance, a partial occlusion as in Figure \ref{fig:SegmentationProblems}. A human can easily identify that the parts on either side of the occluding object belong to same object. This is accomplished using what we shall refer to as \emph{high-level} knowledge throughout this work - in this case, knowledge of the complete nature of an object.
 
 This leads us to the second challenge in image segmentation, which is that, generally speaking, there is no ``correct'' solution to the problem. A perfect labeling for one application might be useless in another. This is even more of a problem when we are discussing segmentation separate from any application, as is the case with standard image segmentation benchmarks (which are use to quantify algorithm performance). These benchmarks use ground-truth image labels (manually created by humans) to score the output of different algorithms. Unfortunately, the correctness of different labellings is highly subjective, and hand-drawn labels from  people can differ radically.
 
 \begin{figure}
-\label{fig:SegmentationProblems}
 \centering
 \includegraphics[width=\linewidth]{figures/Introduction/Segmentation_Problems.pdf}
 \caption[Technical Difficulties of Segmentation]{Technical Difficulties of Segmentation. Here we see some of the myriad of technical difficulties present in color-based segmentation, such as transparent objects (the water bottle), partial occlusions (the toaster), objects with strong color differences (the little monster), and similarities in color (the bottle cap to the table).}
+\label{fig:SegmentationProblems}
 \end{figure}
 
 
@@ -48,10 +46,10 @@ This leads us to the second challenge in image segmentation, which is that, gene
 Tracking entities over time is a critical element in a wide variety of computer vision applications such as visual surveillance, action recognition, and robotic imitation learning. In most of these, visual tracking serves as the precursor to further high-level inference, as without it, one is unable to correctly interpret time-variant systems. One can formalize the tracking problem as estimation of the time-varying hidden state (e.g., position, velocity) of an object $x(t)$ using noisy observations $y(t)$. For simplicity, one generally assumes the state evolution to be a \emph{Markov Process} (see Figure \ref{fig:HMM}), that is, a stochastic process which is conditionally independent of the rest of its history given its previous state.    
 
 \begin{figure}
-\label{fig:HMM}
 \centering
 \includegraphics[width=0.9\linewidth]{figures/Introduction/HMM.pdf}
 \caption[Hidden Markov Model]{The Hidden Markov Model is a classical way to represent the track of an object over time. The object states $x(0\dots t)$ (shown here in blue) are hidden variables which influence observations $y(0\dots t)$ through conditional dependencies (shown as arrows). An important property of the Markov Model is that state at time $t$ is dependent only on state at time $t-1$.}
+\label{fig:HMM}
 \end{figure}
 
 \gls{mtvt} extends these concepts to multiple targets, adding additional complexity due to the need to both estimate the number of tracked targets as well as associate observations with appropriate targets. This is the primary challenge of \gls{mtvt} - the data association problem - deciding which tracked target a particular observation belongs to. Confounding this is the additional null possibility, where an observation belongs to none of the tracked targets. Some additional difficulties present in \gls{mtvt} are related to those of image segmentation, simply extended into the temporal domain. In particular, interacting and occluded targets are especially challenging.
@@ -86,7 +84,7 @@ Segmentation of scenes into objects remains one of the most challenging topics o
 
 There are two standard approaches that have been used to extend the Particle Filter to multiple targets. The first represents all targets jointly in a single particle filter by assigning individual particles to particular labels \cite{MultiMixtureTracking03}. This means that, for a given total number of particles, there will be fewer for each individual target - resulting in reduced accuracy. The second approach is to add additional dimensions to the state space for each additional target \cite{TrackMultTargets01}. Unfortunately, this approach quickly increases the dimensionality of the state space, which also results in a need for a very high number of particles for the filter to remain accurate. 
 
-In both of the above approaches, the computational complexity increases exponentially as targets are added (for constant level of accuracy). As a consequence of this, it is beneficial to use a separate particle filter for each target. One way of doing this is to add factors to the observation and/or process models of the filters which explicitly model occlusions and interactions between targets \cite{MCMCPartFilt_05, ApproxMultiTrack_06}. Alternatively, one can use a discrete processing step to resolve the association of target detections \cite{Koo_IROS2013, Breitenstein_ICCV2009}. 
+In both of the above approaches, the computational complexity increases exponentially as targets are added (for constant level of accuracy). As a consequence of this, it is beneficial to use a separate particle filter for each target. One way of doing this is to add factors to the observation and/or process models of the filters which explicitly model occlusions and interactions between targets \cite{MCMCPartFilt_05, ApproxMultiTrack_06}. Alternatively, one can use a discrete processing step to resolve the association of target detections \cite{Koo_IROS2013}. 
 
 A different approach which has generated much interest is to use the output of detectors as the basis for tracking. Known as \emph{tracking-by-detection}, these methods typically use simple particle filters to maintain tracks \cite{RobustVTMT_06,MultipersonTBD_011}, and shift the focus of the problem onto the data association step, wherein detections are assigned to targets. While there are several classical approaches for solving this association problem from Sonar and Radar research \cite{SonarMultiTrack_83,MultiTrack_79}, a greedy approach is typically sufficient given a good association scoring function \cite{DetTrackMultiHumans_07,MultipersonTBD_011}. 
 

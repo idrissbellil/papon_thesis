@@ -195,7 +195,7 @@
   \vspace*{150mm}
   Referentin/Referent: Prof. Dr. Florentin W\"org\"otter \\
   Koreferentin/Koreferent: Prof. Dr. Dieter Hogrefe \\
-  Tag der m\"undlichen Pr\"ufung: TBD
+  Tag der m\"undlichen Pr\"ufung: 
   \end{flushleft}
 }
 
@@ -238,8 +238,6 @@
 
 % the acknowledgments page
 \newcommand{\acknowledgments}{
-  \chapter*{Acknowledgments}
-  \noindent
   \input{frontmatter/thanks}
   \vspace*{\fill}
   \newpage

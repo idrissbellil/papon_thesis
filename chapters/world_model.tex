@@ -20,7 +20,7 @@ The resolution of a standard RGB-D camera such as the Kinect is 640x480 pixels, 
 \begin{center}
 \includegraphics[width=0.8\linewidth]{figures/WorldModel/stanford_bunny.png}
 \end{center}
-   \caption[Example of Voxelization]{Illustration of Voxelization. On the left we have a point cloud of the ``Stanford Bunny''. This cloud is inserted into the voxel grid shown on the right, where all points falling within on grid unit, or voxel, are combined. From \cite{PCLWebsite}}
+   \caption[Example of Voxelization]{Illustration of Voxelization. On the left we have a point cloud of the ``Stanford Bunny''. This cloud is inserted into the voxel grid shown on the right, where all points falling within on grid unit, or voxel, are combined. From \url{http://www.pointclouds.org/} }
 \label{fig:stanford_bunny}
 \end{figure}
 %------------------------------------------------------------------------
@@ -98,7 +98,7 @@ Once the seed voxels have been selected, we initialize the supervoxel feature ve
 \label{eqn:FeatureSpace}
 \mathbf{F} = [x,y,z,L,a,b,\textrm{FPFH}_{1..33}],
 \end{equation}
-where $x,y,z$ are spatial coordinates, $L,a,b$ are color in CIELab space, and $\textrm{FPFH}_{1..33}$ are the 33 elements of Fast Point Feature Histograms (FPFH), a local geometrical feature proposed by Rusu et al.\@ \cite{FPFH}. FPFH are pose-invariant features which describe the local surface model properties of points using combinations of their \textit{k} nearest neighbors. They are an extension of the older Point Feature Histograms optimized for speed, and have a computational complexity of $O(n \cdot k)$.  
+where $x,y,z$ are spatial coordinates, $L,a,b$ are color in CIELab space, and $\textrm{FPFH}_{1..33}$ are the 33 elements of Fast Point Feature Histograms (FPFH), a local geometrical feature proposed by Rusu et al.\@ \cite{RusuFPFH}. FPFH are pose-invariant features which describe the local surface model properties of points using combinations of their \textit{k} nearest neighbors. They are an extension of the older Point Feature Histograms optimized for speed, and have a computational complexity of $O(n \cdot k)$.  
 
 In order to calculate distances in this space, we must first normalize the spatial component, as distances, and thus their relative importance, will vary depending on the seed resolution ${R}_{seed}$. Similar to the work of Achanta et al.\@, \cite{SLICCompared} we have limited the search space for each cluster so that it ends at the neighboring cluster centers. This means that we can normalize our spatial distance $D_s$ using the maximally distant point considered for clustering, which will lie at a distance of $\sqrt{3} {R}_{seed}$. Color distance $D_c$, is the euclidean distance in CIELab space, normalized by a constant $m$. Distance in FPFH space, $D_f$, is calculated using the Histogram Intersection Kernel \cite{HistogramIntersection}. This leads us to a equation for normalized distance $D$:
 \begin{equation}
@@ -187,7 +187,7 @@ As an example of an application of supervoxels and the adjacency octree, we shal
   \label{fig:flow}
 \end{figure}
 
-The angle of the normals to the vector $\vec d = \vec x_1-\vec x_2$ joining the centroids can be calculated using the identity for the dot product $\vec a\cdot \vec b = |\vec a|\cdot |\vec b|\cdot \cos(\alpha)$ with $\alpha = \measuredangle(\vec a,\vec b)$. For \textit{convex} connections, $\alpha_1$ is smaller than $\alpha_2$ (see Figure~\ref{fig:details}~A). This can be expressed as:
+The angle of the normals to the vector $\vec d = \vec x_1-\vec x_2$ joining the centroids can be calculated using the identity for the dot product $\vec a\cdot \vec b = |\vec a|\cdot |\vec b|\cdot \cos(\alpha)$ with $\alpha = \measuredangle(\vec a,\vec b)$. For \textit{convex} connections, $\alpha_1$ is smaller than $\alpha_2$. This can be expressed as:
   \begin{equation*}
     \alpha_1 < \alpha_2 \Rightarrow \cos(\alpha_1) - \cos(\alpha_2) > 0 \Leftrightarrow \vec {n_1}\cdot \hat d - \vec {n_2}\cdot \hat d > 0,
   \end{equation*}

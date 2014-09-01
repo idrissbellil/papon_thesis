@@ -3,11 +3,13 @@
 
 \documentclass{papon_thesis}
 \usepackage{todonotes}
+\usepackage{emptypage}
+
 %\usepackage[]{showkeys}
 \makeglossaries
 
 \begin{document}
-\watermark {DRAFT COPY ONLY}
+%\watermark {DRAFT COPY ONLY}
 \include{frontmatter/acronyms}
 
 % the front matter
@@ -16,10 +18,11 @@
 \cleardoublepage
 \maketitle
 \cleardoublepage
+\pagenumbering{roman}\setcounter{page}{1}  
 \referentpage
 \include{copyright}
 
-\begingroup
+
 \let\cleardoublepagecopy\cleardoublepage
 \let\cleardoublepage\clearpage
 \abstractpage
@@ -28,9 +31,7 @@
 \listoftables
 \printglossary[type=\acronymtype,title=List of Acronyms,toctitle=Terms and Abbreviations]
 \include{related_publications}
-\endgroup
 \let\cleardoublepage\cleardoublepagecopy
-%\dedicationpage
 \acknowledgments
 
 
@@ -51,7 +52,7 @@
 
 % the back matter
 \clearpage
-\bibliography{IEEEabrv.bib,PaponRefs.bib,references.bib,IROS2013.bib,ECCV2012.bib}
+\bibliography{IEEEabrv.bib,PaponRefs.bib,references.bib,IROS2013.bib,ECCV2012.bib,cvpr2014.bib,dmp.bib}
 \addcontentsline{toc}{chapter}{References}
 \bibliographystyle{plainnat}
 %\include{endmatter/colophon}
