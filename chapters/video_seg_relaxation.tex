@@ -163,7 +163,7 @@ Metropolis algorithm with a simulated annealing, called {\em relaxation process}
 \end{figure}
 
 Superparamagnetic clustering of data was chosen due to its flexibility in allowing the use of any initialization state; there are no particular requirements to the initial states of spin variables. The closer the initial states are to the equilibrium, the less time the Metropolis algorithm needs to converge. This property makes it possible to achieve temporal coherency in the segmentation of temporally adjacent frames by using the sparse label configuration taken from the candidate label image for the spin initialization of the current frame. A final (dense) segmentation result is obtained within a small number of Metropolis updates. Conventional segmentation methods do not generally have this property and cannot turn a sparse segmentation prediction into dense final segments which preserve temporal coherence. Moreover, since the method can directly use sparse predictions as the seed of the segmentation kernel, we can avoid the costly and error-prone block-matching procedure required to find label correspondences in other 
-work, such as in Brendel and Todorovic \cite{SegTrackRegions} or Hedau et al.  \cite{MatchingUnstable}. Figure \ref{fig:Convergence} illustrates the relaxation process, and the convergence of energy after a small number of iterations. 
+work, such as in Brendel and Todorovic \cite{SegTrackRegions} or Hedau et al.  \cite{MatchingUnstable}. Figure \ref{fig:Convergence} illustrates the relaxation process, and the convergence after a small number of iterations. 
 
 \section{Experimental Results}
 \label{sec:Experimental Results}
