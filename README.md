@@ -1,5 +1,12 @@
+##### NOTE
+
+I forked this Latex template from jpapon.
+
 ===============
-NOTE: This is a fork of the original Harvard Latex template by Jordan Suchow (suchow@fas.harvard.edu). 
+
+##### NOTE (by jpapon)
+
+This is a fork of the original Harvard Latex template by Jordan Suchow (suchow@fas.harvard.edu). 
 I've left the original README here as he had it. If you have any questions about the modifications please contact me (Jeremie Papon) at jpapon at gmail dot com.
 
 An introduction
@@ -14,65 +21,74 @@ Installation
 
 ### For Windows XP: ###
 
-Download basic-miktex-2.9.4244.exe  http://miktex.org/
-Download SumatraPDF v 1.5.1 http://blog.kowalczyk.info/software/sumatrapdf/free-pdf-reader.html
+Download [basic-miktex-2.9.4244.exe](http://miktex.org/)
+Download [SumatraPDF v 1.5.1](http://blog.kowalczyk.info/software/sumatrapdf/free-pdf-reader.html)
 Download this Git Repo
 
-Installatioan instructions:
-Copy the contents of fonts\ into
-C:\Program Files\MiKTeX 2.9\fonts\opentype\public\ChaparralPro
+#### Install instructions
+Copy the contents of `fonts\` into
+`C:\Program Files\MiKTeX 2.9\fonts\opentype\public\ChaparralPro`
 
 To complie, from the MSYS command prompt run:
+```cmd
 xelatex -synctex=-1 thesis.tex
+```
 
 
 ### For Mac OS X ###
 
-Downlaod MacTex (when I tried, the main site was down so I used this mirror)
-http://mirror.unl.edu/ctan/systems/mac/mactex/MacTeX.mpkg.zip
+[Downlaod MacTex](http://mirror.unl.edu/ctan/systems/mac/mactex/MacTeX.mpkg.zip)
+(when I tried, the main site was down so I used this mirror)
 it should be roughly 2 GB
 Install.
 
 I use the free PDF reader Skim and the non-free editor TextMate. Both integrate well with latex:
 
-Skim is available http://skim-app.sourceforge.net/
-Set Skim->Preferences->Sync to the Preset "TextMate." You can command-shift-click in the PDF to pull up a line in the code in Textmate.
+Skim is available [here](http://skim-app.sourceforge.net/)
+Set `Skim->Preferences->Sync` to the Preset "TextMate." You can command-shift-click in the PDF to pull up a line in the code in Textmate.
 
-Now to setup TextMate, go to the Bundle->LaTex->Preferences and choose xelatex and Skim respectively.
-Then go to Bundles->Latex-> File Preferences -> Set Master file and select your master file.. thesis.tex
+Now to setup TextMate, go to the `Bundle->LaTex->Preferences` and choose xelatex and Skim respectively.
+Then go to `Bundles->Latex-> File Preferences -> Set Master file and select your master file..` thesis.tex
 
 To compile, from the terminal run:
+```cmd
 xelatex  thesis
+```
 
-I also use Zotero http://www.zotero.org/ with the following modification to enable drag and drop cite keys:
-For Bibtex Drag and Drop Functionality from Zotero see:
-http://forums.zotero.org/discussion/5094/drag-and-drop-bibtex-cite/
-and in particular:
-http://pastebin.com/GXmCJevn
+I also use [Zotero](http://www.zotero.org/) with the following modification to enable drag and drop cite keys:
+For Bibtex Drag and Drop Functionality from Zotero see [this link](http://forums.zotero.org/discussion/5094/drag-and-drop-bibtex-cite/)
+and in particular [this](http://pastebin.com/GXmCJevn)
 
 If this is your first time you are working with LaTeX in TextMate then you would need to install the LaTeX bundle first.
-TextMate->Bundles->LaTeX: tick the box (the installation kicks in automatically)
+`TextMate->Bundles->LaTeX`: tick the box (the installation kicks in automatically)
 
 ### For Ubuntu ###
 
 1. Installing xetex:
-
-	sudo apt-get install texlive-xetex
+```bash
+$ sudo apt-get install texlive-xetex
+```
 
 2. Copy the fonts (from the template folder):
+```bash
 
-	sudo cp fonts/*/usr/local/share/fonts/
+$ sudo cp fonts/* /usr/local/share/fonts/
+```
 
 3. Add
-
-	\aliasfontfeatureoption{Ligatures}{Historic}{Historical}
+```tex
+\aliasfontfeatureoption{Ligatures}{Historic}{Historical}
+```
 
 in harvard-thesis.cls just above the \setromanfont... command.
 This is because the syntax changed at some point from "Historical" to
 "Historic" but the ubuntu package is obviously a little behind. See
-here: http://tug.org/pipermail/xetex/2010-September/018106.html
+[here](http://tug.org/pipermail/xetex/2010-September/018106.html).
 
-4. Run xelatex thesis.tex
+4. Run 
+```bash
+$ xelatex thesis.tex
+```
 
 
 General Links
@@ -81,8 +97,6 @@ General Links
 Harvard Approved Binding Sites:
 http://www.acmebook.com/
 http://www.lbibinders.org/index.php?option=com_content&view=article&id=32&Itemid=80
-
-=======
 
 Known Bugs
 ==========
