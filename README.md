@@ -2,8 +2,6 @@
 
 I forked this Latex template from jpapon.
 
-===============
-
 ##### NOTE (by jpapon)
 
 This is a fork of the original Harvard Latex template by Jordan Suchow (suchow@fas.harvard.edu). 
